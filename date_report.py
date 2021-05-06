@@ -33,6 +33,8 @@ def split_history_items(row_list):
 
 def main(query):
     """ Create report from query export. """
+
+    # Pandas options for debugging.
     pd.set_option('display.width', None)
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_colwidth', None)
