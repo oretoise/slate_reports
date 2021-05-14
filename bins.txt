@@ -1,0 +1,64 @@
+bins, ug
+
+Awaiting Submission
+Conduct Committee Review
+Conduct Committee Approved
+Awaiting Payment
+Awaiting Materials
+Not a New Admission
+
+Ready to Review-Freshmen
+Ready to Review-Transfers
+Awaiting Additional Materials
+
+ARNR Committee
+ARNR Approved
+ARNR Awaiting Materials
+Transfer Reject Committee
+Refer to Test
+Ready to Admit
+Ready to Admit (Contingent)
+Ready to Deny
+Conduct Committee Reject
+Cancel
+Awaiting Release
+Released Decision
+
+bins, readmit
+
+Conduct Committee Review
+Review (Spring)
+Review (Summer and Fall)
+Further Review
+Readmit
+Not a Readmit
+Conduct Review Reject
+
+bins, gr
+
+Awaiting Submission
+Awaiting Payment
+Conduct Committee Review
+Conduct Committee Approved
+Fee Waiver Review
+Awaiting Materials
+Admissions Review
+Awaiting Additional Materials
+Unaccredited
+Unclassified
+Departmental Preview
+Department Review
+Department Final Review
+College Dean Review
+Dean of Grad School Review
+Export Control
+Ready to Admit
+Ready to Admit (Contingent)
+Ready to Admit (Provisional)
+Ready to Deny
+Cancel
+Conduct Committee Reject
+Awaiting Release
+Released Decision
+Official Await
+Matric
