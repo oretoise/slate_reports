@@ -44,6 +44,15 @@ def main(query):
         'Awaiting Submission',
         'Awaiting Payment'
     ]
+
+    # UG bin order
+        # Awaiting Submission -> Awaiting Payment -> Awaiting Materials -> either Ready to Review or Awaiting Materials 
+    # GR bin order
+    # RA bin order
+
+    # "07/13/2021 - Awaiting Materials, 07/13/2021 - Awaiting Submission"
+    # ["07/13/2021 - Awaiting Materials", "07/13/2021 - Awaiting Submission"]
+    # [Object: {date -> 07/13/2021, bin -> "Awaiting Submission", next_bin -> "Awaiting Materials"}, Object : {}]
     
     # Read input file into Pandas dataframe.
     query_df = pd.read_excel(query, engine='openpyxl')
