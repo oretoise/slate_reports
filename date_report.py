@@ -7,6 +7,8 @@ import pandas as pd
 
 from datetime import date, timedelta
 
+import classes
+
 def arguments():
     """ Parse arguments. """
     description = "Create report of what bins applications spend the most time in based on bin history."
@@ -18,18 +20,26 @@ def arguments():
 def split_history(bin_history):
     """ Splits the provided bin history list. """
 
+    # If there is no bin history, return nothing.
     if pd.isna(bin_history):
-        return "none"
+        return
+
+    # Otherwise do some processing.
     else:
-        return bin_history.split(',')
 
+        # Build up list of bins.
+        bin_list = []
 
-def split_history_items(row_list):
-    ret_list = []
-    for item in row_list:
-        ret_list.append(item.split(' - '))
+        # If there is more than one, split them into a list.
+        if ',' in bin_history:
+            bin_list = bin_history.split(',')
+        
+        # Otherwise, use a one-item list.
+        else:
+            bin_list = [bin_history]
+        
+        return bin_list
 
-    return ret_list
 
 def main(query):
     """ Create report from query export. """
@@ -55,16 +65,21 @@ def main(query):
     # [Object: {date -> 07/13/2021, bin -> "Awaiting Submission", next_bin -> "Awaiting Materials"}, Object : {}]
     
     # Read input file into Pandas dataframe.
-    query_df = pd.read_excel(query, engine='openpyxl')
+    query_df = pd.read_csv(query)
+
+    
 
     # Create new column containing python list of each application's bin history.
     query_df['Bin History List'] = query_df['Bin History'].apply(split_history)
 
+    # Only process if length of bin history list > 1.
+    #query_df = query_df[query_df['Bin History List'].loc,]
+
     # Filter out records where bin history is none.
-    query_df = query_df[query_df['Bin History List'] != 'none']
+    #query_df = query_df[query_df['Bin History List'] != 'none']
 
     # Split each (date - bin) pair into a list containing the date and bin name as separate objects.
-    query_df['Bin History List'] = query_df['Bin History List'].apply(split_history_items)
+    #query_df['Bin History List'] = query_df['Bin History List'].apply(split_history_items)
 
     # Sort BH list by date, oldest to latest, then by status list.
 
