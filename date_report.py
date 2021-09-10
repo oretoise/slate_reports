@@ -40,13 +40,82 @@ def split_history(bin_history):
         
         return bin_list
 
+
 def split_history_items(bin_history):
+    '''
+    # Bin Order Listing
+    ug_bin_order = [
+        'Awaiting Submission',
+        'Conduct Committee Review',
+        'Conduct Committee Approved',
+        'Awaiting Payment',
+        'Awaiting Materials',
+        'Not a New Admission',
+        'Ready to Review-Freshmen',
+        'Ready to Review-Transfers',
+        'Awaiting Additional Materials',
+        'ARNR Committee',
+        'ARNR Approved',
+        'ARNR Awaiting Materials',
+        'Transfer Reject Committee',
+        'Refer to Test',
+        'Ready to Admit',
+        'Ready to Admit (Contingent)',
+        'Ready to Deny',
+        'Conduct Committee Reject',
+        'Cancel',
+        'Awaiting Release',
+        'Released Decision'
+    ]
+
+    re_bin_order = [
+        'Conduct Committee Review',
+        'Review (Spring)',
+        'Review (Summer and Fall)',
+        'Further Review',
+        'Readmit',
+        'Not a Readmit',
+        'Conduct Review Reject',
+    ]
+
+    ga_bin_order = [
+        'Awaiting Submission',
+        'Awaiting Payment',
+        'Conduct Committee Review',
+        'Conduct Committee Approved',
+        'Fee Waiver Review',
+        'Awaiting Materials',
+        'Admissions Review', 
+        'Awaiting Additional Materials',
+        'Unaccredited',
+        'Unclassified', 
+        'Departmental Preview', 
+        'Department Review',
+        'Department Final Review',
+        'College Dean Review', 
+        'Dean of Grad School Review', 
+        'Export Control',
+        'Ready to Admit',
+        'Ready to Admit (Contingent)',
+        'Ready to Admit (Provisional)',
+        'Ready to Deny',
+        'Cancel',
+        'Conduct Committee Reject',
+        'Awaiting Release',
+        'Released Decision', 
+        'Official Await',
+        'Matric'
+    ]
+    '''
+
+
     bin_link = List()
 
     for item in bin_history:
         node = Node()
         node.set_data_split(item)
         
+
         tmp = bin_link.head
         while (tmp != None):
             if node.date_completed > tmp.date_completed:
@@ -54,12 +123,30 @@ def split_history_items(bin_history):
                 continue
             break
         bin_link.insert_before(node, tmp)
-    
+        '''
+        while (tmp1 != None):
+            if node.bin_name < tmp.bin_name:
+                tmp = tmp.next
+                continue
+            break
+        bin_link.insert_before(node, tmp1)
+        '''
+
     return bin_link
 
 
+def to_linked_list(list):
+    LList = List()
 
+    for i in range(len(list)):
+        node = Node()
+        node.bin_name = list[i]
+        if (i+1 != len(list)):
+            node.list_data.append(list[i+1])
 
+        LList.append(node)     
+
+    return LList
 
 
 def main(query):
@@ -70,11 +157,70 @@ def main(query):
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_colwidth', None)
 
-    # Bin Order Listing
-    bin_order = [
-        'Awaiting Submission',
-        'Awaiting Payment'
-    ]
+    #Bin Order Listing
+    ug_bin_order = {
+        'Awaiting Submission': 1,
+        'Conduct Committee Review':2,
+        'Conduct Committee Approved':3,
+        'Awaiting Payment':4,
+        'Awaiting Materials':5,
+        'Not a New Admission':6,
+        'Ready to Review-Freshmen':7,
+        'Ready to Review-Transfers':8,
+        'Awaiting Additional Materials':9,
+        'ARNR Committee':10,
+        'ARNR Approved':11,
+        'ARNR Awaiting Materials':12,
+        'Transfer Reject Committee':13,
+        'Refer to Test':14,
+        'Ready to Admit':15,
+        'Ready to Admit (Contingent)':16,
+        'Ready to Deny':17,
+        'Conduct Committee Reject':18,
+        'Cancel':19,
+        'Awaiting Release':20,
+        'Released Decision':21
+    }
+
+    re_bin_order = {
+        'Conduct Committee Review':1,
+        'Review (Spring)':2,
+        'Review (Summer and Fall)':3,
+        'Further Review':4,
+        'Readmit':5,
+        'Not a Readmit':6,
+        'Conduct Review Reject':7,
+    }
+
+    ga_bin_order = {
+        'Awaiting Submission':1,
+        'Awaiting Payment':2,
+        'Conduct Committee Review':3,
+        'Conduct Committee Approved':4,
+        'Fee Waiver Review':5,
+        'Awaiting Materials':6,
+        'Admissions Review':7, 
+        'Awaiting Additional Materials':8,
+        'Unaccredited':9,
+        'Unclassified':10, 
+        'Departmental Preview':11, 
+        'Department Review':12,
+        'Department Final Review':13,
+        'College Dean Review':14, 
+        'Dean of Grad School Review':15, 
+        'Export Control':16,
+        'Ready to Admit':17,
+        'Ready to Admit (Contingent)':18,
+        'Ready to Admit (Provisional)':19,
+        'Ready to Deny':20,
+        'Cancel':21,
+        'Conduct Committee Reject':22,
+        'Awaiting Release':23,
+        'Released Decision':24, 
+        'Official Await':25,
+        'Matric':26
+    }
+
 
     # UG bin order
         # Awaiting Submission -> Awaiting Payment -> Awaiting Materials -> either Ready to Review or Awaiting Materials 
@@ -104,7 +250,7 @@ def main(query):
     query_df['Bin History List'] = query_df['Bin History List'].apply(split_history_items)
     # Sort BH list by date, oldest to latest, then by status list.
     #query_df['Bin History List'] = query_df['Bin History List'].apply(lambda x: x.sort('date'))
-
+    
     # List of statuses by progress (Awaiting Submission -> Payment -> Materials -> Ready to Review -> Awaiting Decision -> Released Decision, everything in between.)
 
     # Build bin history path df, assume logical order (see ^) for same day movement. If a record goes back, make new movement row for the same ref.
@@ -116,7 +262,7 @@ def main(query):
     # Calculate total days for each application status step (Submission, Payment, Materials, Review, Dept Review, Decision, Decision Release, Post-release (enroll, matric))
     # Pivot table that by program (coalesce program based on round key)
 
-    print(query_df['Bin History List'].head(5))
+    print(query_df['Bin History List'].loc[4].head.next.bin_name)
 
 if __name__ == '__main__':
     # Parse CLI arguments.
