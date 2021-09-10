@@ -1,7 +1,10 @@
+from datetime import datetime as dt
+
 class Node:
     bin_name = None
     date_completed = None
     next = None
+    prev = None
     list_data = []
 
     def __init__(self):
@@ -9,7 +12,9 @@ class Node:
         pass
 
     def set_data_split(self, input):
-        self.bin_name, self.date_completed = input.split(' - ')
+        self.date_completed, self.bin_name = input.split(' - ')
+        self.date_completed = self.date_completed.strip()
+        self.date_completed = dt.strptime(self.date_completed, '%m/%d/%Y')
 
     def set_next(self, input_node):
         self.next = input_node
@@ -25,6 +30,7 @@ class List:
             self.head = input
             self.tail = input
         else:
+            self.head.prev = input
             input.next = self.head
             self.head = input
 
@@ -33,29 +39,52 @@ class List:
             self.tail = input
             self.head = input
         else:
+            input.prev = self.tail
             self.tail.next = input
             self.tail = input
 
+    def insert_before(self, node , tmp):
+        if tmp == self.head or self.head == None:
+            self.prepend(node)
+            return
+        if self.tail != None and tmp == None:
+            self.append(node)
+            return
+        
+        node.next = tmp
+        node.prev = tmp.prev
+        tmp.prev.next = node
+        tmp.prev = node
 
+    def display(self):
+        tmp = self.head
+
+        while tmp!=None:
+            print(tmp.date_completed)
+            tmp = tmp.next
 
 if __name__ == "__main__":
     node1 = Node()
     node2 = Node()
     node3 = Node()
+    node4 = Node()
 
-    node1.set_data_split("hello - bye bye")
-    node2.set_data_split("1 - 2")
-    node3.list_data = [1, 2, 3, 4, 5]
+    node1.list_data = ["this is node 1"]
+    node2.list_data = ['this is node 2']
+    node3.list_data = ['this is node 3']
+    node4.list_data = ["this is node 4"]
 
     test_list = List()
 
     test_list.append(node1)
-    test_list.prepend(node2)
+    test_list.append(node2)
     test_list.append(node3)
+    test_list.insert_before(node4, None)
 
-    print(test_list.tail.list_data[4])
-    print(test_list.head.bin_name)
-    print(test_list.head.next.date_completed)
+    test_list.display()
+
+
+    
 
 
 

@@ -7,7 +7,7 @@ import pandas as pd
 
 from datetime import date, timedelta
 
-import classes
+from classes import Node, List
 
 def arguments():
     """ Parse arguments. """
@@ -22,7 +22,7 @@ def split_history(bin_history):
 
     # If there is no bin history, return nothing.
     if pd.isna(bin_history):
-        return
+        return []
 
     # Otherwise do some processing.
     else:
@@ -39,6 +39,27 @@ def split_history(bin_history):
             bin_list = [bin_history]
         
         return bin_list
+
+def split_history_items(bin_history):
+    bin_link = List()
+
+    for item in bin_history:
+        node = Node()
+        node.set_data_split(item)
+        
+        tmp = bin_link.head
+        while (tmp != None):
+            if node.date_completed > tmp.date_completed:
+                tmp = tmp.next
+                continue
+            break
+        bin_link.insert_before(node, tmp)
+    
+    return bin_link
+
+
+
+
 
 
 def main(query):
@@ -71,17 +92,18 @@ def main(query):
 
     # Create new column containing python list of each application's bin history.
     query_df['Bin History List'] = query_df['Bin History'].apply(split_history)
-
+    query_df['History Length'] = query_df['Bin History List'].apply(lambda x: 0 if [] else len(x))
     # Only process if length of bin history list > 1.
-    #query_df = query_df[query_df['Bin History List'].loc,]
+    query_df = query_df[query_df['History Length'] > 1]
 
     # Filter out records where bin history is none.
     #query_df = query_df[query_df['Bin History List'] != 'none']
 
     # Split each (date - bin) pair into a list containing the date and bin name as separate objects.
     #query_df['Bin History List'] = query_df['Bin History List'].apply(split_history_items)
-
+    query_df['Bin History List'] = query_df['Bin History List'].apply(split_history_items)
     # Sort BH list by date, oldest to latest, then by status list.
+    #query_df['Bin History List'] = query_df['Bin History List'].apply(lambda x: x.sort('date'))
 
     # List of statuses by progress (Awaiting Submission -> Payment -> Materials -> Ready to Review -> Awaiting Decision -> Released Decision, everything in between.)
 
