@@ -5,8 +5,6 @@
 import argparse
 import pandas as pd
 
-from datetime import date, timedelta
-
 from classes import Node, List
 
 def arguments():
@@ -20,7 +18,7 @@ def arguments():
 def split_history(bin_history):
     """ Splits the provided bin history list. """
 
-    # If there is no bin history, return nothing.
+    # If there is no bin history, return an empty list.
     if pd.isna(bin_history):
         return []
 
@@ -41,7 +39,7 @@ def split_history(bin_history):
         return bin_list
 
 
-def split_history_items(bin_history):
+def split_history_items(bin_history, key):
     '''
     # Bin Order Listing
     ug_bin_order = [
@@ -108,11 +106,16 @@ def split_history_items(bin_history):
     ]
     '''
 
+    # Create a new linked list object.
+    bin_link = List(key)
 
-    bin_link = List()
-
+    # For each item in the bin history:
     for item in bin_history:
+
+        # Make a new node object.
         node = Node()
+
+        # Set the bin_name and date_completed members.
         node.set_data_split(item)
         
 
@@ -234,20 +237,22 @@ def main(query):
     # Read input file into Pandas dataframe.
     query_df = pd.read_csv(query)
 
-    
-
     # Create new column containing python list of each application's bin history.
     query_df['Bin History List'] = query_df['Bin History'].apply(split_history)
+
+    # Include only applications that have at least two bin history items.
     query_df['History Length'] = query_df['Bin History List'].apply(lambda x: 0 if [] else len(x))
-    # Only process if length of bin history list > 1.
     query_df = query_df[query_df['History Length'] > 1]
 
-    # Filter out records where bin history is none.
-    #query_df = query_df[query_df['Bin History List'] != 'none']
-
     # Split each (date - bin) pair into a list containing the date and bin name as separate objects.
-    #query_df['Bin History List'] = query_df['Bin History List'].apply(split_history_items)
-    query_df['Bin History List'] = query_df['Bin History List'].apply(split_history_items)
+    query_df['Bin History List'] = query_df.apply(lambda x: split_history_items(x['Bin History List'], x['Round Key']), axis=1)
+
+    # Reset the index after filtering for easy indexing.
+    query_df = query_df.reset_index(drop=True)
+
+    # Display a sample linked list object.
+    print(query_df['Bin History List'].loc[0].display())
+
     # Sort BH list by date, oldest to latest, then by status list.
     #query_df['Bin History List'] = query_df['Bin History List'].apply(lambda x: x.sort('date'))
     
@@ -262,7 +267,7 @@ def main(query):
     # Calculate total days for each application status step (Submission, Payment, Materials, Review, Dept Review, Decision, Decision Release, Post-release (enroll, matric))
     # Pivot table that by program (coalesce program based on round key)
 
-    print(query_df['Bin History List'].loc[4].head.next.bin_name)
+    #print(query_df['Bin History List'].loc[4].head.next.bin_name)
 
 if __name__ == '__main__':
     # Parse CLI arguments.
