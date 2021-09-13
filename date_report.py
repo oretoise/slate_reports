@@ -155,6 +155,8 @@ def to_linked_list(list):
 def main(query):
     """ Create report from query export. """
 
+    # Step 1: Build linked lists for bin history data.
+
     # Pandas options for debugging.
     pd.set_option('display.width', None)
     pd.set_option('display.max_columns', None)
@@ -223,16 +225,6 @@ def main(query):
         'Official Await':25,
         'Matric':26
     }
-
-
-    # UG bin order
-        # Awaiting Submission -> Awaiting Payment -> Awaiting Materials -> either Ready to Review or Awaiting Materials 
-    # GR bin order
-    # RA bin order
-
-    # "07/13/2021 - Awaiting Materials, 07/13/2021 - Awaiting Submission"
-    # ["07/13/2021 - Awaiting Materials", "07/13/2021 - Awaiting Submission"]
-    # [Object: {date -> 07/13/2021, bin -> "Awaiting Submission", next_bin -> "Awaiting Materials"}, Object : {}]
     
     # Read input file into Pandas dataframe.
     query_df = pd.read_csv(query)
@@ -244,7 +236,7 @@ def main(query):
     query_df['History Length'] = query_df['Bin History List'].apply(lambda x: 0 if [] else len(x))
     query_df = query_df[query_df['History Length'] > 1]
 
-    # Split each (date - bin) pair into a list containing the date and bin name as separate objects.
+    # Create a linked list of bin history items and their data, including round key, bin names, and bin dates.
     query_df['Bin History List'] = query_df.apply(lambda x: split_history_items(x['Bin History List'], x['Round Key']), axis=1)
 
     # Reset the index after filtering for easy indexing.
@@ -253,21 +245,11 @@ def main(query):
     # Display a sample linked list object.
     print(query_df['Bin History List'].loc[0].display())
 
-    # Sort BH list by date, oldest to latest, then by status list.
-    #query_df['Bin History List'] = query_df['Bin History List'].apply(lambda x: x.sort('date'))
-    
-    # List of statuses by progress (Awaiting Submission -> Payment -> Materials -> Ready to Review -> Awaiting Decision -> Released Decision, everything in between.)
+    # Step 2: Compare linked lists to known good ones and fill in the gaps.
 
-    # Build bin history path df, assume logical order (see ^) for same day movement. If a record goes back, make new movement row for the same ref.
-    # For skips, what should I assume? Perhaps moved on the date of the next step?
-    # Include program on movement_df
+    # Step 3: Calculate date diff for each step in the path.
 
-    # Calculate date diff for each step in the path.
-    # Third DF: status_movement_df
-    # Calculate total days for each application status step (Submission, Payment, Materials, Review, Dept Review, Decision, Decision Release, Post-release (enroll, matric))
-    # Pivot table that by program (coalesce program based on round key)
-
-    #print(query_df['Bin History List'].loc[4].head.next.bin_name)
+    # Step 4: Run basic statistics for date differences per bin movement using the pandas describe() function.
 
 if __name__ == '__main__':
     # Parse CLI arguments.
