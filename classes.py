@@ -84,7 +84,7 @@ class List:
         node = self.head
 
         # Loop until we reach the tail of the linked list.
-        while node != self.tail:
+        while node != None:
 
             # Request the Node prinout.
             print(node)
@@ -99,10 +99,10 @@ if __name__ == "__main__":
     node3 = Node()
     node4 = Node()
 
-    node1.list_data = ["this is node 1"]
-    node2.list_data = ['this is node 2']
-    node3.list_data = ['this is node 3']
-    node4.list_data = ["this is node 4"]
+    node1.bin_name = "this is node 1"
+    node2.bin_name = 'this is node 2'
+    node3.bin_name = 'this is node 3'
+    node4.bin_name = "this is node 4"
 
     test_list = List("UG")
 
