@@ -138,8 +138,8 @@ def split_history_items(bin_history, key):
     return bin_link
 
 
-def to_linked_list(list):
-    LList = List()
+def to_linked_list(list, key):
+    LList = List(key)
 
     for i in range(len(list)):
         node = Node()
@@ -152,17 +152,87 @@ def to_linked_list(list):
     return LList
 
 
+def fill_gaps(history_link, good_link):
+    history_node = history_link.head
+    good_node = good_link.head
+    
+    while history_node is not None and good_node is not None:
+        if history_node.bin_name == good_node.bin_name:
+            history_node = history_node.next
+            good_node = good_node.next
+        else:
+            node = Node()
+            node.bin_name = good_node.bin_name
+            node.date_completed = history_node.date_completed
+
+            history_link.insert_before(node, history_node)
+            good_node = good_node.next
+
+    return history_link
+
 def main(query):
     """ Create report from query export. """
-
-    # Step 1: Build linked lists for bin history data.
-
-    # Pandas options for debugging.
-    pd.set_option('display.width', None)
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.max_colwidth', None)
-
+    
     #Bin Order Listing
+    ug_bin_order = [
+        'Awaiting Submission',
+        'Conduct Committee Review',
+        'Conduct Committee Approved',
+        'Awaiting Payment',
+        'Awaiting Materials',
+        'Not a New Admission',
+        'Ready to Review-Freshmen',
+        'Ready to Review-Transfers',
+        'Awaiting Additional Materials',
+        'ARNR Committee',
+        'ARNR Approved',
+        'ARNR Awaiting Materials',
+        'Transfer Reject Committee',
+        'Refer to Test',
+        'Ready to Admit',
+        'Ready to Admit (Contingent)',
+        'Ready to Deny',
+        'Conduct Committee Reject',
+        'Cancel',
+        'Awaiting Release',
+        'Released Decision']
+    ga_bin_order = [
+        'Awaiting Submission',
+        'Awaiting Payment',
+        'Conduct Committee Review',
+        'Conduct Committee Approved',
+        'Fee Waiver Review',
+        'Awaiting Materials',
+        'Admissions Review', 
+        'Awaiting Additional Materials',
+        'Unaccredited',
+        'Unclassified', 
+        'Departmental Preview', 
+        'Department Review',
+        'Department Final Review',
+        'College Dean Review', 
+        'Dean of Grad School Review', 
+        'Export Control',
+        'Ready to Admit',
+        'Ready to Admit (Contingent)',
+        'Ready to Admit (Provisional)',
+        'Ready to Deny',
+        'Cancel',
+        'Conduct Committee Reject',
+        'Awaiting Release',
+        'Released Decision', 
+        'Official Await',
+        'Matric']
+    ra_bin_order = [
+        'Conduct Committee Review',
+        'Review (Spring)',
+        'Review (Summer and Fall)',
+        'Further Review',
+        'Readmit',
+        'Not a Readmit',
+        'Conduct Review Reject']
+    
+    '''
     ug_bin_order = {
         'Awaiting Submission': 1,
         'Conduct Committee Review':2,
@@ -225,6 +295,23 @@ def main(query):
         'Official Await':25,
         'Matric':26
     }
+    '''
+    # Step 1: Build linked lists for bin history data.
+    ug_link = to_linked_list(ug_bin_order, "UG")
+    ga_link = to_linked_list(ga_bin_order, "GR")
+    ra_link = to_linked_list(ra_bin_order, "RA")
+
+    good_link_dict = {
+        'UG': ug_link,
+        'GR': ga_link,
+        'RA': ra_link
+    }
+    # Pandas options for debugging.
+    pd.set_option('display.width', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_colwidth', None)
+
+    
     
     # Read input file into Pandas dataframe.
     query_df = pd.read_csv(query)
@@ -244,9 +331,10 @@ def main(query):
 
     # Display a sample linked list object.
     print(query_df['Bin History List'].loc[0].display())
-
     # Step 2: Compare linked lists to known good ones and fill in the gaps.
+    query_df['Bin History List'] = query_df.apply(lambda x: fill_gaps(x['Bin History List'], good_link_dict[x['Round Key']]), axis=1)
 
+    print(query_df['Bin History List'].loc[0].display())
     # Step 3: Calculate date diff for each step in the path.
 
     # Step 4: Run basic statistics for date differences per bin movement using the pandas describe() function.
