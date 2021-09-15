@@ -6,6 +6,7 @@ import argparse
 import pandas as pd
 
 from classes import Node, List
+import bins
 
 def arguments():
     """ Parse arguments. """
@@ -16,7 +17,7 @@ def arguments():
 
 
 def split_history(bin_history):
-    """ Splits the provided bin history list. """
+    """ Splits the provided bin history list into a consistent format. """
 
     # If there is no bin history, return an empty list.
     if pd.isna(bin_history):
@@ -40,71 +41,7 @@ def split_history(bin_history):
 
 
 def split_history_items(bin_history, key):
-    '''
-    # Bin Order Listing
-    ug_bin_order = [
-        'Awaiting Submission',
-        'Conduct Committee Review',
-        'Conduct Committee Approved',
-        'Awaiting Payment',
-        'Awaiting Materials',
-        'Not a New Admission',
-        'Ready to Review-Freshmen',
-        'Ready to Review-Transfers',
-        'Awaiting Additional Materials',
-        'ARNR Committee',
-        'ARNR Approved',
-        'ARNR Awaiting Materials',
-        'Transfer Reject Committee',
-        'Refer to Test',
-        'Ready to Admit',
-        'Ready to Admit (Contingent)',
-        'Ready to Deny',
-        'Conduct Committee Reject',
-        'Cancel',
-        'Awaiting Release',
-        'Released Decision'
-    ]
-
-    re_bin_order = [
-        'Conduct Committee Review',
-        'Review (Spring)',
-        'Review (Summer and Fall)',
-        'Further Review',
-        'Readmit',
-        'Not a Readmit',
-        'Conduct Review Reject',
-    ]
-
-    ga_bin_order = [
-        'Awaiting Submission',
-        'Awaiting Payment',
-        'Conduct Committee Review',
-        'Conduct Committee Approved',
-        'Fee Waiver Review',
-        'Awaiting Materials',
-        'Admissions Review', 
-        'Awaiting Additional Materials',
-        'Unaccredited',
-        'Unclassified', 
-        'Departmental Preview', 
-        'Department Review',
-        'Department Final Review',
-        'College Dean Review', 
-        'Dean of Grad School Review', 
-        'Export Control',
-        'Ready to Admit',
-        'Ready to Admit (Contingent)',
-        'Ready to Admit (Provisional)',
-        'Ready to Deny',
-        'Cancel',
-        'Conduct Committee Reject',
-        'Awaiting Release',
-        'Released Decision', 
-        'Official Await',
-        'Matric'
-    ]
-    '''
+    ''' Create the linked list for a given bin history list. '''
 
     # Create a new linked list object.
     bin_link = List(key)
@@ -118,7 +55,7 @@ def split_history_items(bin_history, key):
         # Set the bin_name and date_completed members.
         node.set_data_split(item)
         
-
+        # Append each bin history item in chronological order.
         tmp = bin_link.head
         while (tmp != None):
             if node.date_completed > tmp.date_completed:
@@ -126,14 +63,6 @@ def split_history_items(bin_history, key):
                 continue
             break
         bin_link.insert_before(node, tmp)
-        '''
-        while (tmp1 != None):
-            if node.bin_name < tmp.bin_name:
-                tmp = tmp.next
-                continue
-            break
-        bin_link.insert_before(node, tmp1)
-        '''
 
     return bin_link
 
@@ -170,18 +99,62 @@ def fill_gaps(history_link, good_link):
 
     return history_link
 
+
+def validate(history_linked_list, bin_df):
+    """ Validate given Bin History list against the bin movement rules in bin_df. """
+
+    # Skip for now.
+    if bin_df is None:
+        return history_linked_list
+    else:
+        # Validate
+        #print("List is", history_linked_list.display())
+        
+        # Walk through the nodes.
+        node = history_linked_list.head
+        possibilities = ["Awaiting Submission"]
+        
+        while node != None:
+
+            # Is it what we expect?
+            print("Looking for", node.bin_name, "in", possibilities)
+
+            if node.bin_name in possibilities:
+                # Node is what we expect.
+                print("This is what we expected.")
+                print("Getting possibilities for next appropriate node.")
+
+                # Filter the bin DataFrame to just the one we need.
+                bin = bin_df[bin_df['name'] == node.bin_name].reset_index(drop=True)
+
+                # Get the possibile next bins from it.
+                possibilities = bin['next'].loc[0]
+                print("Possibilities are:", possibilities)
+
+                # Move on to the next node.
+                node = node.next
+            else:
+                print("Current node not in possibilities of prior node. Correction needed.")
+
+                # TODO: Determine which node(s) to insert and insert them using insert_before().
+                quit()
+
+            # If optional: go through each bin in the sequence.
+
+            # If set, do we have at least one item from the set, in the appropriate order?
+
+            #print(node)
+            #index = index + 1
+            #node = node.next
+
+        return
+
+
 def main(query):
     """ Create report from query export. """
     
     #Bin Order Listing
     ug_bin_order = [
-        'Awaiting Submission',
-        'Conduct Committee Review',
-        'Conduct Committee Approved',
-        'Awaiting Payment',
-        'Awaiting Materials',
-        'Not a New Admission',
-        'Ready to Review-Freshmen',
         'Ready to Review-Transfers',
         'Awaiting Additional Materials',
         'ARNR Committee',
@@ -195,7 +168,9 @@ def main(query):
         'Conduct Committee Reject',
         'Cancel',
         'Awaiting Release',
-        'Released Decision']
+        'Released Decision'
+    ]
+
     ga_bin_order = [
         'Awaiting Submission',
         'Awaiting Payment',
@@ -232,87 +207,28 @@ def main(query):
         'Not a Readmit',
         'Conduct Review Reject']
     
-    '''
-    ug_bin_order = {
-        'Awaiting Submission': 1,
-        'Conduct Committee Review':2,
-        'Conduct Committee Approved':3,
-        'Awaiting Payment':4,
-        'Awaiting Materials':5,
-        'Not a New Admission':6,
-        'Ready to Review-Freshmen':7,
-        'Ready to Review-Transfers':8,
-        'Awaiting Additional Materials':9,
-        'ARNR Committee':10,
-        'ARNR Approved':11,
-        'ARNR Awaiting Materials':12,
-        'Transfer Reject Committee':13,
-        'Refer to Test':14,
-        'Ready to Admit':15,
-        'Ready to Admit (Contingent)':16,
-        'Ready to Deny':17,
-        'Conduct Committee Reject':18,
-        'Cancel':19,
-        'Awaiting Release':20,
-        'Released Decision':21
-    }
-
-    re_bin_order = {
-        'Conduct Committee Review':1,
-        'Review (Spring)':2,
-        'Review (Summer and Fall)':3,
-        'Further Review':4,
-        'Readmit':5,
-        'Not a Readmit':6,
-        'Conduct Review Reject':7,
-    }
-
-    ga_bin_order = {
-        'Awaiting Submission':1,
-        'Awaiting Payment':2,
-        'Conduct Committee Review':3,
-        'Conduct Committee Approved':4,
-        'Fee Waiver Review':5,
-        'Awaiting Materials':6,
-        'Admissions Review':7, 
-        'Awaiting Additional Materials':8,
-        'Unaccredited':9,
-        'Unclassified':10, 
-        'Departmental Preview':11, 
-        'Department Review':12,
-        'Department Final Review':13,
-        'College Dean Review':14, 
-        'Dean of Grad School Review':15, 
-        'Export Control':16,
-        'Ready to Admit':17,
-        'Ready to Admit (Contingent)':18,
-        'Ready to Admit (Provisional)':19,
-        'Ready to Deny':20,
-        'Cancel':21,
-        'Conduct Committee Reject':22,
-        'Awaiting Release':23,
-        'Released Decision':24, 
-        'Official Await':25,
-        'Matric':26
-    }
-    '''
+    
     # Step 1: Build linked lists for bin history data.
-    ug_link = to_linked_list(ug_bin_order, "UG")
-    ga_link = to_linked_list(ga_bin_order, "GR")
-    ra_link = to_linked_list(ra_bin_order, "RA")
-
     good_link_dict = {
-        'UG': ug_link,
-        'GR': ga_link,
-        'RA': ra_link
+        'UG': to_linked_list(ug_bin_order, "UG"),
+        'GR': to_linked_list(ga_bin_order, "GR"),
+        'RA': to_linked_list(ra_bin_order, "RA")
     }
+
+    # Import bin structures from bins.py
+    undergrad_bin_df = bins.undergrad()
+
+    bin_dataframes = {
+        "UG": undergrad_bin_df,
+        "GR": None,
+        "RA": None
+    }
+    
     # Pandas options for debugging.
     pd.set_option('display.width', None)
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_colwidth', None)
 
-    
-    
     # Read input file into Pandas dataframe.
     query_df = pd.read_csv(query)
 
@@ -330,11 +246,20 @@ def main(query):
     query_df = query_df.reset_index(drop=True)
 
     # Display a sample linked list object.
-    print(query_df['Bin History List'].loc[0].display())
+    #print("Sample bin history before adjustment:")
+    #print(query_df['Bin History List'].loc[0].display())
+
+    # Run each application's bin history through the validation function, filling in gaps as necessary. 
+    query_df['Validation'] = query_df.apply(lambda x: validate(x['Bin History List'], bin_dataframes[x['Round Key']]), axis=1)
+
+    print(query_df[query_df['Round Key'] == 'UG'].reset_index(drop=True).loc[0])
+
     # Step 2: Compare linked lists to known good ones and fill in the gaps.
     query_df['Bin History List'] = query_df.apply(lambda x: fill_gaps(x['Bin History List'], good_link_dict[x['Round Key']]), axis=1)
 
-    print(query_df['Bin History List'].loc[0].display())
+    #print("Sample bin history after adjustment:")
+    #print(query_df['Bin History List'].loc[0].display())
+
     # Step 3: Calculate date diff for each step in the path.
 
     # Step 4: Run basic statistics for date differences per bin movement using the pandas describe() function.
