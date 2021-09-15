@@ -117,7 +117,7 @@ def validate(history_linked_list, bin_df):
         while node != None:
 
             # Is it what we expect?
-            print("Looking for", node.bin_name, "in", possibilities)
+            print("\nLooking for", node.bin_name, "in", possibilities)
 
             if node.bin_name in possibilities:
                 # Node is what we expect.
@@ -137,6 +137,17 @@ def validate(history_linked_list, bin_df):
                 print("Current node not in possibilities of prior node. Correction needed.")
 
                 # TODO: Determine which node(s) to insert and insert them using insert_before().
+
+                # Traverse the list of possibilites searching for current node in each item's next
+                # if we cannot find it insert first required item
+                # Keep track of set and required possibilites
+                    #[  for item in possibilites 
+                    # if current node in items['next']
+
+                    # else if item type == required
+                    #]
+                
+                
                 quit()
 
             # If optional: go through each bin in the sequence.
