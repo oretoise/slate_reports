@@ -1,16 +1,7 @@
 import pandas as pd
 
-def undergrad():
-
-    # Pandas options for debugging.
-    pd.set_option('display.width', None)
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.max_colwidth', None)
-
-    # Go through each bin, each application must have:
-    # - all bins marked "required"
-    # - one of each bin in a set, per set group (i.e.: one from set 1, one from set 2, ...)
-    # Additionally, for each bin, the next one in the linked list must be in the list of its next bins.
+def undergrad(debug=False):
+    """ Define the Undergraduate bin DataFrame and return it. """
 
     undergrad_bins = [
         {
@@ -65,21 +56,30 @@ def undergrad():
             "name": "Ready to Review-Freshmen",
             "category": "Review",
             "order": 20,
-            "next": [],
+            "next": [
+                "Awaiting Additional Materials",
+                "Awaiting Materials"
+            ],
             "set": "Ready to Review",
             "type": "set"
         },{
             "name": "Ready to Review-Transfers",
             "category": "Review",
             "order": 25,
-            "next": [],
+            "next": [
+                "Awaiting Additional Materials",
+                "Awaiting Materials"
+            ],
             "set": "Ready to Review",
             "type": "set"
         },{
             "name": "Awaiting Additional Materials",
             "category": "Review",
             "order": 28,
-            "next": [],
+            "next": [
+                "Ready to Review-Freshmen",
+                "Ready to Review-Transfers"
+            ],
             "type": "optional"
         },{
             "name": "ARNR Committee",
@@ -153,57 +153,25 @@ def undergrad():
         }
     ]
 
-    readmit_bins = [
-        {
-            "name": "Conduct Committee Review",
-            "category": "Conduct",
-            "next": [],
-            "order": 2,
-            "type": "required"
-        },{
-            "name": "Review (Spring)",
-            "category": "Review",
-            "next": [],
-            "order": 10,
-            "set": "Review Semester",
-            "type": "set"
-        },{
-            "name": "Review (Summer and Fall)",
-            "category": "Review",
-            "next": [],
-            "order": 12,
-            "set": "Review Semester",
-            "type": "set"
-        },{
-            "name": "Further Review",
-            "category": "Review",
-            "next": [],
-            "order": 15,
-            "type": "optional"
-        },{
-            "name": "Readmit",
-            "category": "Decision",
-            "next": [],
-            "order": 20,
-            "set": "Decision",
-            "type": "set"
-        },{
-            "name": "Not a Readmit",
-            "category": "Decision",
-            "next": [],
-            "order": 30,
-            "set": "Decision",
-            "type": "set"
-        },{
-            "name": "Conduct Review Reject",
-            "category": "Decision",
-            "next": [],
-            "order": 40,
-            "type": "optional"
-        }
-    ]
+    # Print debugging information.
+    if debug:
+        print("Loading Undergraduate bins into Dataframe...")
+    
+    # Convert list of dictionaries into a Pandas DataFrame.
+    undergrad_bin_df = pd.DataFrame(undergrad_bins)
 
-    grad_bins = [
+    # Print the Undergraduate bin DataFrame if we're debugging.
+    if debug:
+        print(undergrad_bin_df)
+    
+    # Return the DataFrame.
+    return undergrad_bin_df
+
+
+def graduate(debug=False):
+    """ Define the Graduate bin DataFrame and return it. """
+
+    graduate_bins = [
         {
             "name": "Awaiting Submission",
             "category": "Awaiting Review",
@@ -366,12 +334,101 @@ def undergrad():
             "type": "optional"
         }
     ]
+    
+    # Print debugging information.
+    if debug:
+        print("Loading Graduate bins into Dataframe...")
+    
+    # Convert list of dictionaries into a Pandas DataFrame.
+    grad_bin_df = pd.DataFrame(graduate_bins)
 
-    print("Loading Undergraduate bins into Dataframe...")
-    undergrad_bin_df = pd.DataFrame(undergrad_bins)
-    print(undergrad_bin_df)
-    return undergrad_bin_df
+    # Print the Undergraduate bin DataFrame if we're debugging.
+    if debug:
+        print(grad_bin_df)
+    
+    # Return the DataFrame.
+    return grad_bin_df
+    
+
+def readmit(debug=False):
+    """ Define the Readmission bin DataFrame and return it. """
+    readmit_bins = [
+        {
+            "name": "Conduct Committee Review",
+            "category": "Conduct",
+            "next": [],
+            "order": 2,
+            "type": "required"
+        },{
+            "name": "Review (Spring)",
+            "category": "Review",
+            "next": [],
+            "order": 10,
+            "set": "Review Semester",
+            "type": "set"
+        },{
+            "name": "Review (Summer and Fall)",
+            "category": "Review",
+            "next": [],
+            "order": 12,
+            "set": "Review Semester",
+            "type": "set"
+        },{
+            "name": "Further Review",
+            "category": "Review",
+            "next": [],
+            "order": 15,
+            "type": "optional"
+        },{
+            "name": "Readmit",
+            "category": "Decision",
+            "next": [],
+            "order": 20,
+            "set": "Decision",
+            "type": "set"
+        },{
+            "name": "Not a Readmit",
+            "category": "Decision",
+            "next": [],
+            "order": 30,
+            "set": "Decision",
+            "type": "set"
+        },{
+            "name": "Conduct Review Reject",
+            "category": "Decision",
+            "next": [],
+            "order": 40,
+            "type": "optional"
+        }
+    ]
+
+    # Print debugging information.
+    if debug:
+        print("Loading Graduate bins into Dataframe...")
+    
+    # Convert list of dictionaries into a Pandas DataFrame.
+    readmit_bin_df = pd.DataFrame(readmit_bins)
+
+    # Print the Undergraduate bin DataFrame if we're debugging.
+    if debug:
+        print(readmit_bin_df)
+    
+    # Return the DataFrame.
+    return readmit_bin_df
 
 
 if __name__ == "__main__":
-    undergrad()
+
+    # Pandas options for debugging.
+    pd.set_option('display.width', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_colwidth', None)
+
+    # Build the Undergraduate bin DataFrame.
+    undergrad(debug=True)
+
+    # Build the Graduate bin DataFrame.
+    graduate(debug=True)
+
+    # Build the Readmit bin DataFrame.
+    readmit(debug=True)

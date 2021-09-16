@@ -108,11 +108,13 @@ def validate(history_linked_list, bin_df):
         return history_linked_list
     else:
         # Validate
-        #print("List is", history_linked_list.display())
+        print("List is", history_linked_list.display())
         
         # Walk through the nodes.
         node = history_linked_list.head
         possibilities = ["Awaiting Submission"]
+
+        # At any time, an application can be cancelled and move to the Cancel bin, except for Readmission applications.
         
         while node != None:
 
@@ -166,8 +168,6 @@ def main(query):
     
     #Bin Order Listing
     ug_bin_order = [
-        'Ready to Review-Transfers',
-        'Awaiting Additional Materials',
         'ARNR Committee',
         'ARNR Approved',
         'ARNR Awaiting Materials',
