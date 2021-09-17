@@ -136,7 +136,28 @@ def validate(history_linked_list, bin_df):
                 # Move on to the next node.
                 node = node.next
             else:
-                print("Current node not in possibilities of prior node. Correction needed.")
+                print("Current node not in possibilities of prior node. Correction needed.\n")
+                
+                
+                # Finds node_bin name in item possibilities
+                '''
+                for item in possibilities:
+                    
+                    possible = bin_df[bin_df['name'] == item].reset_index(drop=True)['next'].loc[0]
+
+                    print("Looking for", node.bin_name, "in", item, possible)
+
+                    if node.bin_name in possible:
+                        print(node.bin_name, "found in", possible)
+                        print("Inserting", item, "before", node.bin_name)
+
+                        fill_node = Node()
+                        fill_node.bin_name = item
+                        history_linked_list.insert_before(fill_node, node)
+                        break
+                        
+                node = node.next    
+                '''
 
                 # TODO: Determine which node(s) to insert and insert them using insert_before().
 
