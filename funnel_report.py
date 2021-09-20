@@ -30,6 +30,7 @@ def main(apps, prospects):
     # Clean up apps_df by setting "Program" and "Entry Term" columns based on "Round Key".
 
     print(apps_df.head())
+    print(prospects_df.head())
 
     # Match up applications to prospect records.
 
