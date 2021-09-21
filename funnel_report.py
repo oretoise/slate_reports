@@ -29,10 +29,17 @@ def main(apps, prospects):
 
     # Clean up apps_df by setting "Program" and "Entry Term" columns based on "Round Key".
 
-    print(apps_df.head())
-    print(prospects_df.head())
+    #print(apps_df.head())
+    
 
     # Match up applications to prospect records.
+    #print(prospects_df.apply(lambda x: apps[apps['Prospect ID'] == x['Prospect ID']], axis=1))
+    first = prospects_df.loc[0]['Prospect ID']
+
+    print(first)
+    print(apps_df[apps_df['Prospect ID'] == first]['Ref'])
+
+    prospects_df['Apps'] = prospects_df.apply(lambda x: apps_df[apps_df['Prospect ID'] == x['Prospect ID']]['Ref'], axis=1)
 
     # Determine outcomes for each application.
 
