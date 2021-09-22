@@ -5,24 +5,28 @@
 import argparse
 import pandas as pd
 import time
+import numpy as np
+import re
 
 
 def arguments():
     """ Parse arguments. """
     description = "Create report of what bins applications spend the most time in based on bin history."
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("-a", "--Applications", action="store", help="Applications File", required=True)
-    parser.add_argument("-p", "--Prospects", action="store", help="Prospects File", required=True)
+    parser.add_argument("-a", "--Applications", action="store",
+                        help="Applications File", required=True)
+    parser.add_argument("-p", "--Prospects", action="store",
+                        help="Prospects File", required=True)
     return parser.parse_args()
 
 
 def get_apps(apps, prospect_id):
     """ Get application IDs from apps_df based on given prospect ID. """
     #print("Looking for", prospect_id)
-    #print(apps.head())
+    # print(apps.head())
 
     results = apps[apps['Prospect ID'] == prospect_id]['Ref']
-    #return results
+    # return results
     if results.empty:
         return []
     else:
@@ -42,16 +46,27 @@ def main(apps, prospects):
     apps_df = pd.read_csv(apps)
     prospects_df = pd.read_csv(prospects)
 
-    # TODO: Clean up apps_df by setting "Program" and "Entry Term" columns based on "Round Key".
-    # Ex: If round key is UG, set Program to UG Academic Interest, and set Entry Term to UG Entry Term (App)
-    #print(apps_df.head())
+    # Clean up apps_df by setting "Program" and "Entry Term" columns based on "Round Key".
+    apps_df['Program'] = np.where(apps_df["GR Academic Interest (App)"].isnull(), apps_df["UG Academic Interest (App)"], apps_df["GR Academic Interest (App)"])
+    apps_df['Entry Term'] = np.where(apps_df["UG Entry Term (App)"].isnull(), apps_df["GR Entry Term (App)"], apps_df["UG Entry Term (App)"])
 
+    del apps_df['GR Academic Interest (App)']
+    del apps_df['UG Academic Interest (App)']
+    del apps_df['GR Entry Term (App)']
+    del apps_df['UG Entry Term (App)']
+    
     # Match up applications to prospect records.
-    prospects_df['Apps'] = prospects_df.apply(lambda x: get_apps(apps_df, x['Prospect ID']), axis=1)
+    #prospects_df['Apps'] = prospects_df.apply(lambda x: get_apps(apps_df, x['Prospect ID']), axis=1)
 
     # Determine outcomes for each application.
     # If App status is "Decided", pull "Decision Confirmed Name", else use value from App status.
     # May need to normalize decisions (all "Admit _____" or "GR Admit ______" can just be "Admit")
+    apps_df['Decision Confirmed Name'] = np.where(apps_df['Decision Confirmed Name'].isnull(), '',apps_df['Decision Confirmed Name'])
+    apps_df['Decision Confirmed Name'] = np.where(apps_df['Decision Confirmed Name'].str.contains(pat='Admit'), 'Admit',apps_df['Decision Confirmed Name'])
+    apps_df['Application Status'] = np.where(apps_df['Application Status'] == 'Decided', apps_df['Decision Confirmed Name'], apps_df['Application Status'])
+    
+    del apps_df['Decision Confirmed Name']
+
 
     # Determine general outcome for prospect overall.
     # Ranking of app status, use application outcome for furthest along.
