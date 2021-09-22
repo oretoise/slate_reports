@@ -64,9 +64,9 @@ def main(apps, prospects):
     apps_df['Decision Confirmed Name'] = np.where(apps_df['Decision Confirmed Name'].isnull(), '',apps_df['Decision Confirmed Name'])
     apps_df['Decision Confirmed Name'] = np.where(apps_df['Decision Confirmed Name'].str.contains(pat='Admit'), 'Admit',apps_df['Decision Confirmed Name'])
     apps_df['Application Status'] = np.where(apps_df['Application Status'] == 'Decided', apps_df['Decision Confirmed Name'], apps_df['Application Status'])
-    
-    del apps_df['Decision Confirmed Name']
+    apps_df['Application Status'] = np.where(apps_df['Application Status'] == '', 'Decided', apps_df['Application Status'])
 
+    del apps_df['Decision Confirmed Name']
 
     # Determine general outcome for prospect overall.
     # Ranking of app status, use application outcome for furthest along.
