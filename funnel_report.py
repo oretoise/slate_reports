@@ -4,6 +4,7 @@
 
 import argparse
 import pandas as pd
+import time
 
 
 def arguments():
@@ -13,6 +14,20 @@ def arguments():
     parser.add_argument("-a", "--Applications", action="store", help="Applications File", required=True)
     parser.add_argument("-p", "--Prospects", action="store", help="Prospects File", required=True)
     return parser.parse_args()
+
+
+def get_apps(apps, prospect_id):
+    """ Get application IDs from apps_df based on given prospect ID. """
+    #print("Looking for", prospect_id)
+    #print(apps.head())
+
+    results = apps[apps['Prospect ID'] == prospect_id]['Ref']
+    #return results
+    if results.empty:
+        return []
+    else:
+        # print("Found Refs", results)
+        return results.tolist()
 
 
 def main(apps, prospects):
@@ -27,25 +42,25 @@ def main(apps, prospects):
     apps_df = pd.read_csv(apps)
     prospects_df = pd.read_csv(prospects)
 
-    # Clean up apps_df by setting "Program" and "Entry Term" columns based on "Round Key".
-
+    # TODO: Clean up apps_df by setting "Program" and "Entry Term" columns based on "Round Key".
+    # Ex: If round key is UG, set Program to UG Academic Interest, and set Entry Term to UG Entry Term (App)
     #print(apps_df.head())
-    
 
     # Match up applications to prospect records.
-    #print(prospects_df.apply(lambda x: apps[apps['Prospect ID'] == x['Prospect ID']], axis=1))
-    first = prospects_df.loc[0]['Prospect ID']
-
-    print(first)
-    print(apps_df[apps_df['Prospect ID'] == first]['Ref'])
-
-    prospects_df['Apps'] = prospects_df.apply(lambda x: apps_df[apps_df['Prospect ID'] == x['Prospect ID']]['Ref'], axis=1)
+    prospects_df['Apps'] = prospects_df.apply(lambda x: get_apps(apps_df, x['Prospect ID']), axis=1)
 
     # Determine outcomes for each application.
+    # If App status is "Decided", pull "Decision Confirmed Name", else use value from App status.
+    # May need to normalize decisions (all "Admit _____" or "GR Admit ______" can just be "Admit")
+
+    # Determine general outcome for prospect overall.
+    # Ranking of app status, use application outcome for furthest along.
 
     # For each prospect, compare application outcomes to initial entry term.
+    # If they match, "match", if one lataer, "later", etc.
 
     # Count prospects, application steps and outcomes by program. (Need mapping for prospect program -> app program.)
+    # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
 
 
 if __name__ == '__main__':
