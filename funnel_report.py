@@ -75,6 +75,7 @@ def main(apps, prospects):
     # If they match, "match", if one lataer, "later", etc.
 
     # Count prospects, application steps and outcomes by program. (Need mapping for prospect program -> app program.)
+    programs_df = pd.read_csv('programs.csv')
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
 
 
