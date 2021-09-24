@@ -29,7 +29,7 @@ def get_apps(apps, prospect_id):
 def rank_apps(apps, app_refs):
     """ Determine higest ranking application for a prospect, if it exists. """
 
-    if len(app_refs)> 0:
+    if len(app_refs)> 2:
 
         status_ranking = {
             'Admit': 100,
@@ -49,13 +49,16 @@ def rank_apps(apps, app_refs):
         }
 
         # Get applications for the prospect.
-        print("Getting apps...")
-        relevant_apps = apps[apps['Ref'] in app_refs]
-
-        # Sort the DataFrame using status_ranking as a key.
-        relevant_apps.sort_values(by='Ref', key=lambda: status_ranking[relevant_apps['Application Status']]).reset_index()
+        #print("Getting apps...")
+        relevant_apps = apps[apps['Ref'].isin(app_refs)]
 
         print(relevant_apps)
+        # Sort the DataFrame using status_ranking as a key.
+        relevant_apps.sort_values(by='Application Status', key=lambda x: x.apply(lambda y: status_ranking[str(y)]), ascending=False).reset_index()
+
+        print(relevant_apps)
+        quit()
+        #print(relevant_apps)
 
         # Return highest-ranking Application Status.
         return relevant_apps.iloc[0]
@@ -113,7 +116,7 @@ def main(apps, prospects):
     # Count prospects, application steps and outcomes by program.
     programs_df = pd.read_csv('programs.csv')
 
-    print(prospects_df.iloc[10000])
+    #print(prospects_df.iloc[10000][['Furthest App', 'Apps', 'Prospect']])
 
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
 
