@@ -58,7 +58,7 @@ def rank_apps(apps, app_refs):
             return
         else:
 
-            print(relevant_apps['Application Status'])
+            #print(relevant_apps['Application Status'])
             
             # Sort the DataFrame using status_ranking as a key.
             relevant_apps = relevant_apps.sort_values(by='Application Status', key=lambda x: x.apply(lambda y: status_ranking[str(y)]), ascending=False).reset_index()
@@ -67,7 +67,7 @@ def rank_apps(apps, app_refs):
             #print(relevant_apps)
 
             # Return highest-ranking Application Status.
-            return relevant_apps.iloc[0].index
+            return int(relevant_apps.iloc[0]['index'])
     else:
         return
 
@@ -119,8 +119,10 @@ def main(apps, prospects):
     # Make another column for Furthest app's Program and Entry Term, and Application Status
     # Fill Nan values in Furthest Application Status with "Prospect"
 
-    prospects_with_apps = prospects_df[pd.notna(prospects_df['Apps'])]
-    print(prospects_with_apps)
+    print(prospects_df['Furthest App'].head(30))
+    print(apps_df.iloc[int(prospects_df.iloc[10]['Furthest App'])])
+    #prospects_df['Furthest App'] = np.where(prospects_df['Furthest App'].isnull(), 'Prospect', prospects_df['Furthest App'])
+    #prospects_df['App Entry Term'] = np.where(pd.notna(prospects_df['Furthest App']), apps_df.iloc[int(prospects_df['Furthest App'])]['Entry Term'], None) 
 
     # For each prospect, compare furthest application term to prospect entry term. "Entry Term Match?"
     # If they match, "match", if one lataer, "later", etc.
