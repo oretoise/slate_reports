@@ -52,10 +52,10 @@ def rank_apps(apps, app_refs):
         #print("Getting apps...")
         relevant_apps = apps[apps['Ref'].isin(app_refs)]
 
-        print(relevant_apps)
+        print(relevant_apps['Application Status'])
+        
         # Sort the DataFrame using status_ranking as a key.
-        relevant_apps.sort_values(by='Application Status', key=lambda x: x.apply(lambda y: status_ranking[str(y)]), ascending=False).reset_index()
-
+        relevant_apps = relevant_apps.sort_values(by='Application Status', key=lambda x: x.apply(lambda y: status_ranking[str(y)]), ascending=False).reset_index()
         print(relevant_apps)
         quit()
         #print(relevant_apps)
