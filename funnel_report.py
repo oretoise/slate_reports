@@ -29,7 +29,7 @@ def get_apps(apps, prospect_id):
 def rank_apps(apps, app_refs):
     """ Determine higest ranking application for a prospect, if it exists. """
 
-    if len(app_refs)> 2:
+    if len(app_refs) > 0:
 
         status_ranking = {
             'Admit': 100,
@@ -47,21 +47,27 @@ def rank_apps(apps, app_refs):
             'Reject': 95,
             'UG ACCESS Cancelled': 0
         }
+        
+        # print(app_refs)
 
         # Get applications for the prospect.
-        #print("Getting apps...")
         relevant_apps = apps[apps['Ref'].isin(app_refs)]
+        relevant_apps = relevant_apps[pd.notna(relevant_apps['Application Status'])]
 
-        print(relevant_apps['Application Status'])
-        
-        # Sort the DataFrame using status_ranking as a key.
-        relevant_apps = relevant_apps.sort_values(by='Application Status', key=lambda x: x.apply(lambda y: status_ranking[str(y)]), ascending=False).reset_index()
-        print(relevant_apps)
-        quit()
-        #print(relevant_apps)
+        if relevant_apps.empty:
+            return
+        else:
 
-        # Return highest-ranking Application Status.
-        return relevant_apps.iloc[0]
+            print(relevant_apps['Application Status'])
+            
+            # Sort the DataFrame using status_ranking as a key.
+            relevant_apps = relevant_apps.sort_values(by='Application Status', key=lambda x: x.apply(lambda y: status_ranking[str(y)]), ascending=False).reset_index()
+            # print(relevant_apps)
+            # quit()
+            #print(relevant_apps)
+
+            # Return highest-ranking Application Status.
+            return relevant_apps.iloc[0].index
     else:
         return
 
@@ -110,13 +116,21 @@ def main(apps, prospects):
     # Rank/Sort applications by 'Application Status'.
     prospects_df['Furthest App'] = prospects_df.apply(lambda x: rank_apps(apps_df, x['Apps']), axis=1)
 
-    # For each prospect, compare application outcomes to initial entry term.
+    # Make another column for Furthest app's Program and Entry Term, and Application Status
+    # Fill Nan values in Furthest Application Status with "Prospect"
+
+    prospects_with_apps = prospects_df[pd.notna(prospects_df['Apps'])]
+    print(prospects_with_apps)
+
+    # For each prospect, compare furthest application term to prospect entry term. "Entry Term Match?"
     # If they match, "match", if one lataer, "later", etc.
+
 
     # Count prospects, application steps and outcomes by program.
     programs_df = pd.read_csv('programs.csv')
 
-    #print(prospects_df.iloc[10000][['Furthest App', 'Apps', 'Prospect']])
+    # Compare prospect program and furtherest application program to see if they match or not. Could put result in new column "Program Match?"
+    # for each, get row from programs_df where app_program == prospect->furthest app->Program, then pull prospect_program from programs_df, then compare that to prospect->Program
 
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
 
