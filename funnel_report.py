@@ -4,7 +4,6 @@
 
 import argparse
 import pandas as pd
-import time
 import numpy as np
 import re
 
@@ -22,16 +21,46 @@ def arguments():
 
 def get_apps(apps, prospect_id):
     """ Get application IDs from apps_df based on given prospect ID. """
-    #print("Looking for", prospect_id)
-    # print(apps.head())
 
     results = apps[apps['Prospect ID'] == prospect_id]['Ref']
-    # return results
-    if results.empty:
-        return []
+    return results.tolist()
+
+
+def rank_apps(apps, app_refs):
+    """ Determine higest ranking application for a prospect, if it exists. """
+
+    if len(app_refs)> 0:
+
+        status_ranking = {
+            'Admit': 100,
+            'Awaiting Conduct': 50,
+            'Awaiting Confirmation': 70,
+            'Awaiting Decision': 80,
+            'Awaiting Materials': 10,
+            'Awaiting Payment': 5,
+            'Awaiting Submission': 0,
+            'Cancelled': 0,
+            'Decided': 90,
+            'GR Cancelled': 0,
+            'GR Reject - Academic Deficiency': 95,
+            'GR Reject - Other': 95,
+            'Reject': 95,
+            'UG ACCESS Cancelled': 0
+        }
+
+        # Get applications for the prospect.
+        print("Getting apps...")
+        relevant_apps = apps[apps['Ref'] in app_refs]
+
+        # Sort the DataFrame using status_ranking as a key.
+        relevant_apps.sort_values(by='Ref', key=lambda: status_ranking[relevant_apps['Application Status']]).reset_index()
+
+        print(relevant_apps)
+
+        # Return highest-ranking Application Status.
+        return relevant_apps.iloc[0]
     else:
-        # print("Found Refs", results)
-        return results.tolist()
+        return
 
 
 def main(apps, prospects):
@@ -56,7 +85,11 @@ def main(apps, prospects):
     del apps_df['UG Entry Term (App)']
     
     # Match up applications to prospect records.
-    #prospects_df['Apps'] = prospects_df.apply(lambda x: get_apps(apps_df, x['Prospect ID']), axis=1)
+    prospects_df['Apps'] = prospects_df.apply(lambda x: get_apps(apps_df, x['Prospect ID']), axis=1)
+
+    # Testing relation.
+    # print(prospects_df.iloc[10000])
+    # print(apps_df[apps_df['Ref'].isin(prospects_df.iloc[10000]['Apps'])])
 
     # Determine outcomes for each application.
     # If App status is "Decided", pull "Decision Confirmed Name", else use value from App status.
@@ -68,14 +101,20 @@ def main(apps, prospects):
 
     del apps_df['Decision Confirmed Name']
 
-    # Determine general outcome for prospect overall.
-    # Ranking of app status, use application outcome for furthest along.
+    # print(apps_df.head())
+    # print(prospects_df.head())
+    
+    # Rank/Sort applications by 'Application Status'.
+    prospects_df['Furthest App'] = prospects_df.apply(lambda x: rank_apps(apps_df, x['Apps']), axis=1)
 
     # For each prospect, compare application outcomes to initial entry term.
     # If they match, "match", if one lataer, "later", etc.
 
-    # Count prospects, application steps and outcomes by program. (Need mapping for prospect program -> app program.)
+    # Count prospects, application steps and outcomes by program.
     programs_df = pd.read_csv('programs.csv')
+
+    print(prospects_df.iloc[10000])
+
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
 
 
