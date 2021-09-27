@@ -71,6 +71,20 @@ def rank_apps(apps, app_refs):
     else:
         return
 
+def program_match(row, programs):
+    program = row.Program
+    app_program = row['App Program']
+
+
+    if programs[programs.app_program == app_program].prospect_program.empty:
+        return None
+
+    prospect_program = programs[programs.app_program == app_program].prospect_program
+
+    if (prospect_program == program).bool():
+        return 'Match'
+    else:
+        return 'No Match'
 
 def main(apps, prospects):
     """ Build funnel report based on prospects and applications data. """
@@ -109,33 +123,32 @@ def main(apps, prospects):
     apps_df['Application Status'] = np.where(apps_df['Application Status'] == '', 'Decided', apps_df['Application Status'])
 
     del apps_df['Decision Confirmed Name']
-
-    # print(apps_df.head())
-    # print(prospects_df.head())
     
     # Rank/Sort applications by 'Application Status'.
     prospects_df['Furthest App'] = prospects_df.apply(lambda x: rank_apps(apps_df, x['Apps']), axis=1)
 
     # Make another column for Furthest app's Program and Entry Term, and Application Status
-    # Fill Nan values in Furthest Application Status with "Prospect"
+    prospects_df['App Entry Term'] = prospects_df.apply(lambda x: apps_df.iloc[int(x['Furthest App'])]['Entry Term']
+                                     if pd.notna(x['Furthest App']) else None, axis=1)
 
-    print(prospects_df['Furthest App'].head(30))
-    print(apps_df.iloc[int(prospects_df.iloc[10]['Furthest App'])])
-    #prospects_df['Furthest App'] = np.where(prospects_df['Furthest App'].isnull(), 'Prospect', prospects_df['Furthest App'])
-    #prospects_df['App Entry Term'] = np.where(pd.notna(prospects_df['Furthest App']), apps_df.iloc[int(prospects_df['Furthest App'])]['Entry Term'], None) 
+    prospects_df['App Program'] = prospects_df.apply(lambda x: apps_df.iloc[int(x['Furthest App'])]['Program']
+                                     if pd.notna(x['Furthest App']) else None, axis=1)
+
+    # Fill Nan values in Furthest Application Status with "Prospect"
+    prospects_df['Furthest App'] = np.where(prospects_df['Furthest App'].isnull(), 'Prospect', prospects_df['Furthest App'])
 
     # For each prospect, compare furthest application term to prospect entry term. "Entry Term Match?"
-    # If they match, "match", if one lataer, "later", etc.
-
+    prospects_df['Entry Term Match'] = np.where(prospects_df['Term']==prospects_df['App Entry Term'], 'Match', 'Later')
 
     # Count prospects, application steps and outcomes by program.
     programs_df = pd.read_csv('programs.csv')
 
     # Compare prospect program and furtherest application program to see if they match or not. Could put result in new column "Program Match?"
     # for each, get row from programs_df where app_program == prospect->furthest app->Program, then pull prospect_program from programs_df, then compare that to prospect->Program
+    prospects_df['Program Match'] = prospects_df.apply(lambda x: program_match(x, programs_df), axis=1)
+    print(prospects_df[['Apps', 'Program', 'Furthest App', 'App Program', 'Program Match']].head(30))
 
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
-
 
 if __name__ == '__main__':
     # Parse CLI arguments.
