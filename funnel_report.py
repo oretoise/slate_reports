@@ -146,9 +146,19 @@ def main(apps, prospects):
     # Compare prospect program and furtherest application program to see if they match or not. Could put result in new column "Program Match?"
     # for each, get row from programs_df where app_program == prospect->furthest app->Program, then pull prospect_program from programs_df, then compare that to prospect->Program
     prospects_df['Program Match'] = prospects_df.apply(lambda x: program_match(x, programs_df), axis=1)
-    print(prospects_df[['Apps', 'Program', 'Furthest App', 'App Program', 'Program Match']].head(30))
 
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
+    del prospects_df['Birthdate']
+    del prospects_df['Email']
+    del prospects_df['Campus']
+    del prospects_df['Created']
+    del prospects_df['Ref']
+    del prospects_df['Prospect ID']
+    del prospects_df['Apps']
+    del prospects_df['Furthest App']
+
+    prospects_df.to_csv('prospects.csv')
+
 
 if __name__ == '__main__':
     # Parse CLI arguments.
