@@ -71,6 +71,7 @@ def rank_apps(apps, app_refs):
     else:
         return
 
+
 def program_match(row, programs):
     program = row.Program
     app_program = row['App Program']
@@ -85,6 +86,7 @@ def program_match(row, programs):
         return 'Match'
     else:
         return 'No Match'
+
 
 def main(apps, prospects):
     """ Build funnel report based on prospects and applications data. """
@@ -135,7 +137,10 @@ def main(apps, prospects):
                                      if pd.notna(x['Furthest App']) else None, axis=1)
 
     # Fill Nan values in Furthest Application Status with "Prospect"
-    prospects_df['Furthest App'] = np.where(prospects_df['Furthest App'].isnull(), 'Prospect', prospects_df['Furthest App'])
+    prospects_df['Furthest App Status'] = prospects_df.apply(lambda x: apps_df.iloc[int(x['Furthest App'])]['Application Status']
+                                     if pd.notna(x['Furthest App']) else None, axis=1)
+
+    prospects_df['Furthest App Status'] = np.where(prospects_df['Furthest App Status'].isnull(), 'Prospect', prospects_df['Furthest App Status'])
 
     # For each prospect, compare furthest application term to prospect entry term. "Entry Term Match?"
     prospects_df['Entry Term Match'] = np.where(prospects_df['Term']==prospects_df['App Entry Term'], 'Match', 'Later')
@@ -155,9 +160,21 @@ def main(apps, prospects):
     del prospects_df['Ref']
     del prospects_df['Prospect ID']
     del prospects_df['Apps']
-    del prospects_df['Furthest App']
+    #del prospects_df['Furthest App']
 
     prospects_df.to_csv('prospects.csv')
+
+    # 1: Pie chart of Entry Term Match column
+    # Answers the question "Do people apply for the semester they initially inquire about?"
+
+    # 2: Pie chart of Program Match column
+    # Answers the question "Do people apply for the program they initially inquire about?"
+
+    # 3: Count of prospects by Prospect Program
+
+    # 4: Pivot table of Application Program converted into Prospect Program (drop if no match in programs.csv), columns: Furthest App Status value (except for Prospect).
+
+    # 5: Combine 3 and 4 into one pivot table with program as rows, (Prospect count & Furthest App Status values) as columns.
 
 
 if __name__ == '__main__':
