@@ -171,11 +171,12 @@ def main(apps, prospects):
     # Answers the question "Do people apply for the program they initially inquire about?"
 
     # 3: Count of prospects by Prospect Program
-
+    test = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values= 'Name', aggfunc='count')
     # 4: Pivot table of Application Program converted into Prospect Program (drop if no match in programs.csv), columns: Furthest App Status value (except for Prospect).
 
     # 5: Combine 3 and 4 into one pivot table with program as rows, (Prospect count & Furthest App Status values) as columns.
 
+    test.to_csv('report_funnel.csv')
 
 if __name__ == '__main__':
     # Parse CLI arguments.
