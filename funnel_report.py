@@ -5,7 +5,8 @@
 import argparse
 import pandas as pd
 import numpy as np
-import re
+import xlsxwriter
+from matplotlib import pyplot as plt
 
 
 def arguments():
@@ -166,17 +167,23 @@ def main(apps, prospects):
 
     # 1: Pie chart of Entry Term Match column
     # Answers the question "Do people apply for the semester they initially inquire about?"
-
+    
+    # pie = prospects_df.plot.pie(y='Entry Term Match', figsize=(5,5))
+    fig1 = prospects_df['Entry Term Match'].value_counts().plot(kind='pie').get_figure()
+    fig1.savefig('entry_match.png')
+    plt.clf()
     # 2: Pie chart of Program Match column
     # Answers the question "Do people apply for the program they initially inquire about?"
-
+    fig2= prospects_df['Program Match'].value_counts().plot(kind='pie').get_figure()
+    fig2.savefig('program_match.png')
+    plt.clf()
     # 3: Count of prospects by Prospect Program
-    test = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values= 'Name', aggfunc='count')
+    prospect_program = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values= 'Name', aggfunc='count')
     # 4: Pivot table of Application Program converted into Prospect Program (drop if no match in programs.csv), columns: Furthest App Status value (except for Prospect).
-
+    
     # 5: Combine 3 and 4 into one pivot table with program as rows, (Prospect count & Furthest App Status values) as columns.
-
-    test.to_csv('report_funnel.csv')
+    prospect_program.to_excel('report_funnel.xlsx', sheet_name='Prospects-Program Info', engine='xlsxwriter')
+    
 
 if __name__ == '__main__':
     # Parse CLI arguments.
