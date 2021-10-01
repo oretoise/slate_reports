@@ -166,16 +166,18 @@ def main(apps, prospects):
     prospects_df.to_csv('prospects.csv')
 
     # 1: Pie chart of Entry Term Match column
-    # Answers the question "Do people apply for the semester they initially inquire about?"
+    # Answers the question "Do people apply for the semester they initially inquire about?"    
+    pie1 = prospects_df['Entry Term Match'].value_counts().plot(kind='pie', autopct='%1.1f%%', explode=(0.05, 0), colors=('chocolate', 'slategray'))
+    pie1.set_title('Does Prospects Furthest Application Term Match Their Inquire Term?')
     
-    # pie = prospects_df.plot.pie(y='Entry Term Match', figsize=(5,5))
-    fig1 = prospects_df['Entry Term Match'].value_counts().plot(kind='pie').get_figure()
-    fig1.savefig('entry_match.png')
+    pie1.get_figure().savefig('entry_match.png')
     plt.clf()
     # 2: Pie chart of Program Match column
     # Answers the question "Do people apply for the program they initially inquire about?"
-    fig2= prospects_df['Program Match'].value_counts().plot(kind='pie').get_figure()
-    fig2.savefig('program_match.png')
+    pie2= prospects_df['Program Match'].value_counts().plot(kind='pie', autopct='%1.1f%%', explode=(0.05, 0), colors=('cornflowerblue', 'silver'))
+    pie2.set_title('Do Prospects apply for the program they initially inquire about?')
+
+    pie2.get_figure().savefig('program_match.png')
     plt.clf()
     # 3: Count of prospects by Prospect Program
     prospect_program = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values= 'Name', aggfunc='count')
