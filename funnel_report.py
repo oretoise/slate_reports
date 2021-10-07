@@ -48,8 +48,6 @@ def rank_apps(apps, app_refs):
             'Reject': 95,
             'UG ACCESS Cancelled': 0
         }
-        
-        # print(app_refs)
 
         # Get applications for the prospect.
         relevant_apps = apps[apps['Ref'].isin(app_refs)]
@@ -58,14 +56,9 @@ def rank_apps(apps, app_refs):
         if relevant_apps.empty:
             return
         else:
-
-            #print(relevant_apps['Application Status'])
             
             # Sort the DataFrame using status_ranking as a key.
             relevant_apps = relevant_apps.sort_values(by='Application Status', key=lambda x: x.apply(lambda y: status_ranking[str(y)]), ascending=False).reset_index()
-            # print(relevant_apps)
-            # quit()
-            #print(relevant_apps)
 
             # Return highest-ranking Application Status.
             return int(relevant_apps.iloc[0]['index'])
@@ -113,10 +106,6 @@ def main(apps, prospects):
     # Match up applications to prospect records.
     prospects_df['Apps'] = prospects_df.apply(lambda x: get_apps(apps_df, x['Prospect ID']), axis=1)
 
-    # Testing relation.
-    # print(prospects_df.iloc[10000])
-    # print(apps_df[apps_df['Ref'].isin(prospects_df.iloc[10000]['Apps'])])
-
     # Determine outcomes for each application.
     # If App status is "Decided", pull "Decision Confirmed Name", else use value from App status.
     # May need to normalize decisions (all "Admit _____" or "GR Admit ______" can just be "Admit")
@@ -153,38 +142,26 @@ def main(apps, prospects):
     # for each, get row from programs_df where app_program == prospect->furthest app->Program, then pull prospect_program from programs_df, then compare that to prospect->Program
     prospects_df['Program Match'] = prospects_df.apply(lambda x: program_match(x, programs_df), axis=1)
 
+    # TODO: Add college column based on primary program. (either furthest app or first in list of prospect ones if multiple)
+
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
     del prospects_df['Birthdate']
-    del prospects_df['Email']
     del prospects_df['Campus']
     del prospects_df['Created']
     del prospects_df['Ref']
-    del prospects_df['Prospect ID']
     del prospects_df['Apps']
-    #del prospects_df['Furthest App']
 
-    prospects_df.to_csv('prospects.csv')
-
-    # 1: Pie chart of Entry Term Match column
-    # Answers the question "Do people apply for the semester they initially inquire about?"    
-    
-    # pie1 = prospects_df['Entry Term Match'].value_counts().plot(kind='pie', autopct='%1.1f%%', explode=(0.05, 0), colors=('chocolate', 'slategray'))
-    # pie1.set_title('Does Prospects Furthest Application Term Match Their Inquire Term?')
-    
-    # pie1.get_figure().savefig('entry_match.png')
-    # plt.clf()
-   
-    # 2: Pie chart of Program Match column
-    # Answers the question "Do people apply for the program they initially inquire about?"
-    
-    # pie2= prospects_df['Program Match'].value_counts().plot(kind='pie', autopct='%1.1f%%', explode=(0.05, 0), colors=('cornflowerblue', 'silver'))
-    # pie2.set_title('Do Prospects apply for the program they initially inquire about?')
-
-    # pie2.get_figure().savefig('program_match.png')
-    # plt.clf()
+    # Export Prospects DF for some reason.
+    # prospects_df.to_csv('prospects.csv')
     
     # 3: Count of prospects by Prospect Program
-    prospect_program = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values= 'Name', aggfunc='count')
+    prospect_program = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values= 'Prospect ID', aggfunc='count')
+
+    # TODO: Combine:
+        # Cancelled and GR Cancelled
+        # All GR Rejects and Reject
+        # Reorder into chronological steps.
+    
     # 4: Pivot table of Application Program converted into Prospect Program (drop if no match in programs.csv), columns: Furthest App Status value (except for Prospect).
     
     # 5: Combine 3 and 4 into one pivot table with program as rows, (Prospect count & Furthest App Status values) as columns.
