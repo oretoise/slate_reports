@@ -16,12 +16,7 @@ def arguments():
 
 def get_dept(email):
 
-    bad_emails = [
-        "katie@poultry.msstate.edu",
-        "JLarson@ads.msstate.edu"
-    ]
-
-    if "msstate.edu" in email and email not in bad_emails:
+    if "msstate.edu" in email:
 
         # Press the end key.
         pyautogui.press('end')
@@ -54,6 +49,8 @@ def main(honorlock_csv):
 
     # Sort professors based on session_count.
     sorted_profs = honorlock.groupby(['instructor_name', 'instructor_email']).apply(lambda x: x.groupby('CRN').session_count.first().sum()).reset_index(name="total").sort_values(by='total', ascending=False)
+
+    sorted_profs.to_csv('sorted_prof.csv', index=False)
 
     # Hit windows key + 1
     pyautogui.hotkey('win', '1')
