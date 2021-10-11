@@ -81,6 +81,26 @@ def program_match(row, programs):
     else:
         return 'No Match'
 
+def sep_prog(df, programs):
+    tmp = []
+    for index, row in df.iterrows():
+        orig = row
+        if '/' in str(row.Program):
+            split = row.Program.split('/')
+            if str(row['Furthest App Status']) == 'Prospect':
+                for i in split:
+                    row.Program = i
+                    #df = df.append(row,ignore_index=True)
+                    tmp.append(row)
+            else:
+                programs[programs.app_program == row['App Program']].prospect_program
+                row.Program = row['App Program']
+                #df = df.append(row,ignore_index=True)
+                tmp.append(row)
+            df.drop(labels=index, axis=0, inplace=True)
+    tmp = pd.DataFrame(tmp, columns=df.columns)
+    df = df.append(tmp, ignore_index=True)
+    return df
 
 def main(apps, prospects):
     """ Build funnel report based on prospects and applications data. """
@@ -135,6 +155,7 @@ def main(apps, prospects):
     # For each prospect, compare furthest application term to prospect entry term. "Entry Term Match?"
     prospects_df['Entry Term Match'] = np.where(prospects_df['Term']==prospects_df['App Entry Term'], 'Match', 'Later')
     prospects_df['Entry Term Match'] = np.where((pd.notna(prospects_df['Term'])) & (pd.notna(prospects_df['App Entry Term'])), prospects_df['Entry Term Match'], None)
+    
     # Count prospects, application steps and outcomes by program.
     programs_df = pd.read_csv('programs.csv')
 
@@ -142,9 +163,11 @@ def main(apps, prospects):
     # for each, get row from programs_df where app_program == prospect->furthest app->Program, then pull prospect_program from programs_df, then compare that to prospect->Program
     prospects_df['Program Match'] = prospects_df.apply(lambda x: program_match(x, programs_df), axis=1)
 
-    # TODO: For prospects with multiple programs, keep either further app, or if prospect, split into multiple records (one for each program) as prospects for each program.
-
+    # For prospects with multiple programs, keep either further app, or if prospect, split into multiple records (one for each program) as prospects for each program.
+    prospects_df = sep_prog(prospects_df, programs_df)
+    
     # TODO: Add college column based on primary program. (either furthest app or first in list of prospect ones if multiple)
+    # prospects_df['College'] = np.where(prospects_df['Program'] in prospects_df)
 
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
     del prospects_df['Birthdate']
@@ -152,6 +175,7 @@ def main(apps, prospects):
     del prospects_df['Created']
     del prospects_df['Ref']
     del prospects_df['Apps']
+    
     
     # 3: Count of prospects by Prospect Program
     prospect_program = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values= 'Prospect ID', aggfunc='count')
@@ -161,17 +185,21 @@ def main(apps, prospects):
     prospect_program['Cancelled'] = prospect_program['Cancelled'] + prospect_program['GR Cancelled']
     del prospect_program['GR Cancelled']
     
-    # TODO: Combine
-        # All GR Rejects and Reject
-        # Reorder into chronological steps.
-            # Prospect, Awaiting Submission, Awaiting Payment, Awaiting Materials, Awaiting Conduct, Awaiting Decision, Awaiting Confirmation, Admit/Reject, Decided, Cancelled
-    
+    # Combine All GR Rejects and Reject
+    prospect_program['Reject'] = prospect_program['Reject'] + prospect_program['GR Reject - Academic Deficiency'] + prospect_program['GR Reject - Other']
+    del prospect_program['GR Reject - Academic Deficiency']
+    del prospect_program['GR Reject - Other']
+
+    # Reorder into chronological steps.
+    column_order = ['Prospect', 'Awaiting Submission', 'Awaiting Payment', 'Awaiting Materials', 'Awaiting Conduct', 'Awaiting Decision', 'Awaiting Confirmation', 
+    'Reject','Admit','Decided', 'Cancelled']
+    prospect_program = prospect_program.reindex(column_order, axis=1)
+
     # 4: Pivot table of Application Program converted into Prospect Program (drop if no match in programs.csv), columns: Furthest App Status value (except for Prospect).
     
     # 5: Combine 3 and 4 into one pivot table with program as rows, (Prospect count & Furthest App Status values) as columns.
     prospect_program.to_excel('report_funnel.xlsx', sheet_name='Prospects-Program Info', engine='xlsxwriter')
 
-    print(prospect_program)
     
 
 if __name__ == '__main__':
