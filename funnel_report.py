@@ -142,6 +142,8 @@ def main(apps, prospects):
     # for each, get row from programs_df where app_program == prospect->furthest app->Program, then pull prospect_program from programs_df, then compare that to prospect->Program
     prospects_df['Program Match'] = prospects_df.apply(lambda x: program_match(x, programs_df), axis=1)
 
+    # TODO: For prospects with multiple programs, keep either further app, or if prospect, split into multiple records (one for each program) as prospects for each program.
+
     # TODO: Add college column based on primary program. (either furthest app or first in list of prospect ones if multiple)
 
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
@@ -150,22 +152,26 @@ def main(apps, prospects):
     del prospects_df['Created']
     del prospects_df['Ref']
     del prospects_df['Apps']
-
-    # Export Prospects DF for some reason.
-    # prospects_df.to_csv('prospects.csv')
     
     # 3: Count of prospects by Prospect Program
     prospect_program = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values= 'Prospect ID', aggfunc='count')
+    prospect_program = prospect_program.fillna(0)
 
-    # TODO: Combine:
-        # Cancelled and GR Cancelled
+    # Combine Cancelled and GR Cancelled into one column.
+    prospect_program['Cancelled'] = prospect_program['Cancelled'] + prospect_program['GR Cancelled']
+    del prospect_program['GR Cancelled']
+    
+    # TODO: Combine
         # All GR Rejects and Reject
         # Reorder into chronological steps.
+            # Prospect, Awaiting Submission, Awaiting Payment, Awaiting Materials, Awaiting Conduct, Awaiting Decision, Awaiting Confirmation, Admit/Reject, Decided, Cancelled
     
     # 4: Pivot table of Application Program converted into Prospect Program (drop if no match in programs.csv), columns: Furthest App Status value (except for Prospect).
     
     # 5: Combine 3 and 4 into one pivot table with program as rows, (Prospect count & Furthest App Status values) as columns.
     prospect_program.to_excel('report_funnel.xlsx', sheet_name='Prospects-Program Info', engine='xlsxwriter')
+
+    print(prospect_program)
     
 
 if __name__ == '__main__':
