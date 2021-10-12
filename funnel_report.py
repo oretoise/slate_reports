@@ -82,19 +82,27 @@ def program_match(row, programs):
 def sep_prog(df, programs):
     tmp = []
     for index, row in df.iterrows():
-        orig = row
         if ';' in str(row.Program):
             split = row.Program.split(';')
             if str(row['Furthest App Status']) == 'Prospect':
                 for i in range(len(split)):
-                    row.Program = split[i]                    
-                    tmp.append(row)
+                    # Make a deep copy of the row.
+                    row_copy = row.copy(deep=True)
+
+                    # Set the program.
+                    row_copy.Program = split[i]
+                    row_copy['Prospect ID'] = row_copy['Prospect ID'] + "-" + str(i)
+                    print(row_copy)
+
+                    # Append modified copy to tmp.  
+                    tmp.append(row_copy)
             else:
                 row['App Program'] = programs[programs.app_program == row['App Program']].prospect_program
-                row.Program = row['App Program']
+                row.Program = row['App Program'].values[0]
 
                 tmp.append(row)
             df.drop(labels=index, axis=0, inplace=True)
+    
     tmp = pd.DataFrame(tmp, columns=df.columns)
     df = df.append(tmp, ignore_index=True)
     return df
@@ -168,10 +176,12 @@ def main(apps, prospects):
 
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
     del prospects_df['Apps']
+
+    prospects_df.to_csv('prospects_df.csv')
     
     
     # 3: Count of prospects by Prospect Program
-    prospect_program = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values= 'Prospect ID', aggfunc='count')
+    prospect_program = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values='Prospect ID', aggfunc='count')
     prospect_program = prospect_program.fillna(0)
 
     # Combine Cancelled and GR Cancelled into one column.
