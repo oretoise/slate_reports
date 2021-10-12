@@ -14,7 +14,7 @@
                 "-a",
                 "funnel_applicants.csv",
                 "-p",
-                "funnel_prospects.csv"
+                "prospects.csv"
             ]
         }
     ]

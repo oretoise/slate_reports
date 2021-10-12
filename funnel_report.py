@@ -5,8 +5,6 @@
 import argparse
 import pandas as pd
 import numpy as np
-import xlsxwriter
-from matplotlib import pyplot as plt
 
 
 def arguments():
@@ -85,17 +83,16 @@ def sep_prog(df, programs):
     tmp = []
     for index, row in df.iterrows():
         orig = row
-        if '/' in str(row.Program):
-            split = row.Program.split('/')
+        if ';' in str(row.Program):
+            split = row.Program.split(';')
             if str(row['Furthest App Status']) == 'Prospect':
-                for i in split:
-                    row.Program = i
-                    #df = df.append(row,ignore_index=True)
+                for i in range(len(split)):
+                    row.Program = split[i]                    
                     tmp.append(row)
             else:
-                programs[programs.app_program == row['App Program']].prospect_program
+                row['App Program'] = programs[programs.app_program == row['App Program']].prospect_program
                 row.Program = row['App Program']
-                #df = df.append(row,ignore_index=True)
+
                 tmp.append(row)
             df.drop(labels=index, axis=0, inplace=True)
     tmp = pd.DataFrame(tmp, columns=df.columns)
@@ -170,10 +167,6 @@ def main(apps, prospects):
     # prospects_df['College'] = np.where(prospects_df['Program'] in prospects_df)
 
     # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
-    del prospects_df['Birthdate']
-    del prospects_df['Campus']
-    del prospects_df['Created']
-    del prospects_df['Ref']
     del prospects_df['Apps']
     
     
