@@ -11,7 +11,37 @@ def arguments():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("-p", "--Honorlock", action="store",
                         help="Honorlock Usage File (CSV)", required=True)
+    parser.add_argument("-s", "--Skip", action="store_true", default=False,
+                        help="Skip directory lookup", required=False)
     return parser.parse_args()
+
+
+def campus(crn):
+    """ Figure out campus based on course number. """
+
+    if crn.startswith('-'):
+        if crn.startswith('-XL-'):
+            return "Crosslisted"
+        elif crn.startswith('-EXT-'):
+            return "External"
+    else:
+        if '-' in crn:
+            crn_split = crn.split('-')
+
+            if len(crn_split) > 2:
+                section = crn_split[2]
+
+                if section.startswith('H') or section.startswith('E'):
+                    section = section[1:]
+                
+                if len(section) == 2:
+                    return "Campus 1"
+                else:
+                    return "Campus " + section[0]
+            else:
+                return "Other"
+        else:
+            return "Other"
 
 
 def get_dept(email):
@@ -44,20 +74,34 @@ def get_dept(email):
         return
 
 
-def main(honorlock_csv):
+def main(honorlock_csv, skip):
     honorlock = pd.read_csv(honorlock_csv)
 
+    professors = pd.read_csv('prof_dept.csv')
+
+    # Determine campus.
+    honorlock['campus'] = honorlock['CRN'].apply(campus)
+
     # Sort professors based on session_count.
-    sorted_profs = honorlock.groupby(['instructor_name', 'instructor_email']).apply(lambda x: x.groupby('CRN').session_count.first().sum()).reset_index(name="total").sort_values(by='total', ascending=False)
+    sorted_profs = honorlock.groupby(['instructor_name', 'instructor_email', 'campus']).apply(lambda x: x.groupby(['campus', 'CRN']).session_count.first().sum()).reset_index(name="total").sort_values(by='total', ascending=False)
 
-    sorted_profs.to_csv('sorted_prof.csv', index=False)
+    # sorted_profs['Campus'] = sorted_profs['CRN'].apply(campus)
+    sorted_profs['Department'] = sorted_profs['instructor_name'].apply(
+        lambda x: professors[professors['instructor_name'] == x]['department'].values[0])
 
-    # Hit windows key + 1
-    pyautogui.hotkey('win', '1')
+    if not skip:
 
-    # For each professor, grab their department info from Banner using PyAutoGUI, ignoring any non-msstate.edu email addresses.
-    sorted_profs['Department'] = sorted_profs['instructor_email'].apply(get_dept)
+        # Hit windows key + 1
+        pyautogui.hotkey('win', '1')
+
+        # For each professor, grab their department info from Banner using PyAutoGUI, ignoring any non-msstate.edu email addresses.
+        sorted_profs['Department'] = sorted_profs['instructor_email'].apply(get_dept)
+    
+    # Display results.
     print(sorted_profs.head())
+
+    # Output to CSV file.
+    sorted_profs.to_csv('sorted_prof.csv', index=False)
 
 
 if __name__ == '__main__':
@@ -65,4 +109,4 @@ if __name__ == '__main__':
     ARGS = arguments()
 
     # Call main function.
-    main(ARGS.Honorlock)
+    main(ARGS.Honorlock, ARGS.Skip)
