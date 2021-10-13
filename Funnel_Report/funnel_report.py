@@ -184,7 +184,11 @@ def main(apps, prospects):
 
 
     # Count prospects, application steps and outcomes by program.
-    programs_df = pd.read_csv('programs.csv')
+    try:
+        programs_df = pd.read_csv('programs.csv')
+    except FileNotFoundError:
+        print("Cannot find programs.csv. Is it in the same folder as this script?")
+        raise SystemExit
 
     # Compare prospect program and furtherest application program to see if they match or not
     prospects_df['Program Match'] = prospects_df.apply(lambda x: program_match(x, programs_df), axis=1)
