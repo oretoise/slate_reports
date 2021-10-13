@@ -92,7 +92,6 @@ def sep_prog(df, programs):
                     # Set the program.
                     row_copy.Program = split[i]
                     row_copy['Prospect ID'] = row_copy['Prospect ID'] + "-" + str(i)
-                    print(row_copy)
 
                     # Append modified copy to tmp.  
                     tmp.append(row_copy)
@@ -107,6 +106,19 @@ def sep_prog(df, programs):
     df = df.append(tmp, ignore_index=True)
     return df
 
+def college_col(x,college_df):
+    try:
+        if pd.notna(x['Program']) & (not college_df[college_df.prospect_program == x['Program']].empty): 
+                y = str(college_df[college_df.prospect_program == str(x['Program'])].college.values[0])
+                return y
+        else:
+            return None
+    except:
+        print(college_df[college_df.prospect_program == x['Program']]['college'])
+        print(x)
+        quit()
+
+
 def main(apps, prospects):
     """ Build funnel report based on prospects and applications data. """
 
@@ -118,6 +130,10 @@ def main(apps, prospects):
     # Load apps and prospects files into DataFrames.
     apps_df = pd.read_csv(apps)
     prospects_df = pd.read_csv(prospects)
+
+
+
+
 
     # Clean up apps_df by setting "Program" and "Entry Term" columns based on "Round Key".
     apps_df['Program'] = np.where(apps_df["GR Academic Interest (App)"].isnull(), apps_df["UG Academic Interest (App)"], apps_df["GR Academic Interest (App)"])
@@ -132,8 +148,6 @@ def main(apps, prospects):
     prospects_df['Apps'] = prospects_df.apply(lambda x: get_apps(apps_df, x['Prospect ID']), axis=1)
 
     # Determine outcomes for each application.
-    # If App status is "Decided", pull "Decision Confirmed Name", else use value from App status.
-    # May need to normalize decisions (all "Admit _____" or "GR Admit ______" can just be "Admit")
     apps_df['Decision Confirmed Name'] = np.where(apps_df['Decision Confirmed Name'].isnull(), '',apps_df['Decision Confirmed Name'])
     apps_df['Decision Confirmed Name'] = np.where(apps_df['Decision Confirmed Name'].str.contains(pat='Admit'), 'Admit',apps_df['Decision Confirmed Name'])
     apps_df['Application Status'] = np.where(apps_df['Application Status'] == 'Decided', apps_df['Decision Confirmed Name'], apps_df['Application Status'])
@@ -141,6 +155,10 @@ def main(apps, prospects):
 
     del apps_df['Decision Confirmed Name']
     
+
+
+
+
     # Rank/Sort applications by 'Application Status'.
     prospects_df['Furthest App'] = prospects_df.apply(lambda x: rank_apps(apps_df, x['Apps']), axis=1)
 
@@ -161,47 +179,68 @@ def main(apps, prospects):
     prospects_df['Entry Term Match'] = np.where(prospects_df['Term']==prospects_df['App Entry Term'], 'Match', 'Later')
     prospects_df['Entry Term Match'] = np.where((pd.notna(prospects_df['Term'])) & (pd.notna(prospects_df['App Entry Term'])), prospects_df['Entry Term Match'], None)
     
+
+
+
+
     # Count prospects, application steps and outcomes by program.
     programs_df = pd.read_csv('programs.csv')
 
-    # Compare prospect program and furtherest application program to see if they match or not. Could put result in new column "Program Match?"
-    # for each, get row from programs_df where app_program == prospect->furthest app->Program, then pull prospect_program from programs_df, then compare that to prospect->Program
+    # Compare prospect program and furtherest application program to see if they match or not
     prospects_df['Program Match'] = prospects_df.apply(lambda x: program_match(x, programs_df), axis=1)
 
     # For prospects with multiple programs, keep either further app, or if prospect, split into multiple records (one for each program) as prospects for each program.
     prospects_df = sep_prog(prospects_df, programs_df)
-    
-    # TODO: Add college column based on primary program. (either furthest app or first in list of prospect ones if multiple)
-    # prospects_df['College'] = np.where(prospects_df['Program'] in prospects_df)
 
-    # Once we have the program mapping, it should be just general data cleanup (renaming columns, things like that), then calling pd.pivot()
+
+
+
+
+    # Add college column based on primary program.
+    college_df = pd.read_csv("colleges.csv")
+    
+    prospects_df['College'] = prospects_df.apply(lambda x: college_col(x,college_df), axis=1)
+    
+
+
+
+    # Data Cleanup Section
     del prospects_df['Apps']
-
-    prospects_df.to_csv('prospects_df.csv')
     
-    
-    # 3: Count of prospects by Prospect Program
+    # Pivot tables for Application status by Program and college
     prospect_program = pd.pivot_table(prospects_df, index='Program', columns='Furthest App Status', values='Prospect ID', aggfunc='count')
+    college_pivot = pd.pivot_table(prospects_df, index='College', columns='Furthest App Status', values='Prospect ID', aggfunc='count')
+    
     prospect_program = prospect_program.fillna(0)
+    college_pivot = college_pivot.fillna(0)
 
     # Combine Cancelled and GR Cancelled into one column.
     prospect_program['Cancelled'] = prospect_program['Cancelled'] + prospect_program['GR Cancelled']
+    college_pivot['Cancelled'] = college_pivot['Cancelled'] + college_pivot['GR Cancelled']
+    
     del prospect_program['GR Cancelled']
+    del college_pivot['GR Cancelled']
     
     # Combine All GR Rejects and Reject
     prospect_program['Reject'] = prospect_program['Reject'] + prospect_program['GR Reject - Academic Deficiency'] + prospect_program['GR Reject - Other']
+    college_pivot['Reject'] = college_pivot['Reject'] + college_pivot['GR Reject - Academic Deficiency'] + college_pivot['GR Reject - Other']
+
     del prospect_program['GR Reject - Academic Deficiency']
     del prospect_program['GR Reject - Other']
+    del college_pivot['GR Reject - Academic Deficiency']
+    del college_pivot['GR Reject - Other']
 
     # Reorder into chronological steps.
     column_order = ['Prospect', 'Awaiting Submission', 'Awaiting Payment', 'Awaiting Materials', 'Awaiting Conduct', 'Awaiting Decision', 'Awaiting Confirmation', 
     'Reject','Admit','Decided', 'Cancelled']
-    prospect_program = prospect_program.reindex(column_order, axis=1)
 
-    # 4: Pivot table of Application Program converted into Prospect Program (drop if no match in programs.csv), columns: Furthest App Status value (except for Prospect).
-    
-    # 5: Combine 3 and 4 into one pivot table with program as rows, (Prospect count & Furthest App Status values) as columns.
-    prospect_program.to_excel('report_funnel.xlsx', sheet_name='Prospects-Program Info', engine='xlsxwriter')
+    prospect_program = prospect_program.reindex(column_order, axis=1)
+    college_pivot = college_pivot.reindex(column_order, axis=1)
+
+    # Export Pivot tables to excel
+    with pd.ExcelWriter('report_funnel.xlsx') as writer:
+        prospect_program.to_excel(writer, sheet_name='Prospects-Program Info')
+        college_pivot.to_excel(writer, sheet_name='Prospects-College Info')
 
     
 
