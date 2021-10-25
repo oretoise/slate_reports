@@ -201,7 +201,11 @@ def main(apps, prospects):
 
 
     # Add college column based on primary program.
-    college_df = pd.read_csv("colleges.csv")
+    try:
+        college_df = pd.read_csv("colleges.csv")
+    except FileNotFoundError:
+        print("Cannot find colleges.csv. Is it in the same folder as this script?")
+        raise SystemExit
     
     prospects_df['College'] = prospects_df.apply(lambda x: college_col(x,college_df), axis=1)
     
