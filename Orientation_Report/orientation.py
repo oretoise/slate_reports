@@ -56,7 +56,7 @@ def main():
     
     df = df[[not elem for elem in df.index.str.contains("Day", na=False)]]
         
-    list = ['MSU', 'digit', 'Date', 'Admit', 'Final', 'Term', 'term', '#', 'ID', 'Total', 'First', 'Last', 'Name', 'Student', 'Id', 'Totat', 'Semester', 'Username', 'Date', "Score"]
+    list = ['MSU', 'digit', 'Digit', 'Date', 'Admit', 'Final', 'Term', 'term', '#', 'ID', 'Total', 'First', 'Last', 'Name', 'Student','student', 'Id', 'Totat', 'Semester', 'Username', 'Date']
     boolean_list = []
     flag = False
 
@@ -73,9 +73,13 @@ def main():
             continue
         boolean_list.append(False)
 
+    print(df.shape)
+
     df = df[boolean_list]
 
     print(df.shape)
+    
+    df.to_excel("test.xlsx")
 
 if __name__ == "__main__":
     # Parse CLI arguments.
