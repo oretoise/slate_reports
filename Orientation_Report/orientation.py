@@ -30,7 +30,7 @@ def data_to_df(data_path):
     and then returning one combined dataframe
     '''
 
-    
+
     dfs = []
     df = pd.DataFrame()
 
@@ -49,19 +49,33 @@ def main():
     # aggregate the data into a big dataframe
     df = data_to_df(pathlib.Path(os.getcwd()) / "data")
 
-    print(df.shape)
+    
+    df = df.transpose()
 
-    # df.transpose()
-
-    # print(df.index)
-    # df.index.dropna(inplace=True)
-
-    # print(df.index)
-    # for col in df.columns:
-    #     print(col)
+    # print(df.index.str.contains("Day", na=False))
+    
+    df = df[[not elem for elem in df.index.str.contains("Day", na=False)]]
         
+    list = ['MSU', 'digit', 'Date', 'Admit', 'Final', 'Term', 'term', '#', 'ID', 'Total', 'First', 'Last', 'Name', 'Student', 'Id', 'Totat', 'Semester', 'Username', 'Date', "Score"]
+    boolean_list = []
+    flag = False
 
-            
+    # print(df.index)
+
+    for element in df.index:
+        for thing in list:
+            if thing in str(element):
+                boolean_list.append(True)
+                flag = True
+                break
+        if flag:
+            flag = False
+            continue
+        boolean_list.append(False)
+
+    df = df[boolean_list]
+
+    print(df.shape)
 
 if __name__ == "__main__":
     # Parse CLI arguments.
