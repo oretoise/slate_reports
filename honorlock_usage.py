@@ -9,10 +9,10 @@ def arguments():
     """ Parse arguments. """
     description = "Create report of what bins applications spend the most time in based on bin history."
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("-p", "--Honorlock", action="store",
+    parser.add_argument("-i", "--Honorlock Input", action="store",
                         help="Honorlock Usage File (CSV)", required=True)
-    parser.add_argument("-s", "--Skip", action="store_true", default=False,
-                        help="Skip directory lookup", required=False)
+    parser.add_argument("-l", "--Lookup", action="store_true", default=False,
+                        help="Directory lookup", required=False)
     return parser.parse_args()
 
 
@@ -31,7 +31,7 @@ def campus(crn):
             if len(crn_split) > 2:
                 section = crn_split[2]
 
-                if section.startswith('H') or section.startswith('E'):
+                if section.startswith('H') or section.startswith('E') or section.startswith('C'):
                     section = section[1:]
                 
                 if len(section) == 2:
