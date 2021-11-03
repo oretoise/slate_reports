@@ -10,7 +10,7 @@ import pathlib
 import openpyxl
 
 import time
-import datetime
+from datetime import datetime as dt
 
 
 def data_to_df(data_path):
@@ -126,6 +126,31 @@ def construct_result(df):
 
     return combined_frame.reset_index(drop=True).dropna(thresh=4)
 
+def to_datetime(x):
+    season_dict = {
+        "Fall": 'September 22',
+        "Summer": "June 21", 
+        "Spring": "March 20"
+    }
+
+    if str(x) == 'Readmit' or str(x) == np.nan:
+        return x
+    try:
+        y = str(x).split(' ')
+        y = dt.strptime(season_dict[y[0]] + ' ' + y[1], "%B %d %Y")
+        return y
+    except KeyError:
+        return x
+
+def time_difference(x):
+    y = dt.strptime(' '.join(x['Filename']), "%Y %B %d")
+    z = to_datetime(x['Admits'])
+
+    try:
+        return z - y
+    except:
+        return np.NaN
+
 def main():
 
     # aggregate the data into a big dataframe
@@ -137,13 +162,18 @@ def main():
     # condense into 4 columns
     final_df = construct_result(df)
 
-    final_df['Filename'] = final_df['Filename'].apply(lambda x: x.split("_Orientation")[0])
-    final_df['Folder'] = final_df['Folder'].apply(lambda x: x.split("\\")[-1])
-    
-    ''' for debugging '''
+    # format filename and folder values
+    final_df['Filename'] = final_df['Filename'].apply(lambda x: x.split("_Orientation")[0].split("_"))
+    final_df['Folder'] = final_df['Folder'].apply(lambda x: x.split("\\")[-1].split("_"))
+    final_df['Folder'] = final_df['Folder'].apply(lambda x: ' '.join(x))    
+
+    # calculate time difference and format filename
+    final_df['Time Difference'] = final_df.apply(time_difference, axis=1)
+    final_df['Filename'] = final_df['Filename'].apply(lambda x: ' '.join(x))
+
+    # output results
     final_df.to_excel("final_df.xlsx")
     
-
 if __name__ == "__main__":
 
     # Call main function.
