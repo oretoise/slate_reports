@@ -2,7 +2,6 @@
 File: orientation.py
 """
 
-import argparse
 import numpy as np
 import pandas as pd
 
@@ -13,16 +12,6 @@ import openpyxl
 import time
 import datetime
 
-pd.set_option('display.width', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_colwidth', None)
-
-# def arguments():
-#     """ Parse CLI arguments. """
-#     description = "Create a year-to-date report of application data."
-#     parser = argparse.ArgumentParser(description=description)
-#     parser.add_argument("-i", "--Input", action="store", help="Application Data File", required=True)
-#     return parser.parse_args()
 
 def data_to_df(data_path):
     ''' 
@@ -148,16 +137,14 @@ def main():
     # condense into 4 columns
     final_df = construct_result(df)
 
+    final_df['Filename'] = final_df['Filename'].apply(lambda x: x.split("_Orientation")[0])
+    final_df['Folder'] = final_df['Folder'].apply(lambda x: x.split("\\")[-1])
     
     ''' for debugging '''
     final_df.to_excel("final_df.xlsx")
-    # df.to_excel("df.xlsx")
-    # print(final_df.shape)
     
 
 if __name__ == "__main__":
-    # Parse CLI arguments.
-    # ARGS = arguments()
 
     # Call main function.
     main()
