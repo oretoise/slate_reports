@@ -29,8 +29,8 @@ def data_to_df(data_path):
                 dfs.append(pd.read_excel(data_path / subdir / filename, engine = 'openpyxl'))
             elif filename.endswith('.csv'):
                 dfs.append(pd.read_csv(data_path / subdir / filename))
-            dfs[-1]['Filename'] = filename
-            dfs[-1]['Folder'] = subdir
+            dfs[-1]['Start Orientation Date'] = filename
+            dfs[-1]['Orientation Year'] = subdir
     df = pd.concat(dfs)
     return df
 
@@ -38,7 +38,7 @@ def eliminate_columns(df):
 
     df = df[[not elem for elem in df.index.str.contains("Day", na=False)]]
         
-    list = ['MSU', 'digit', 'Digit', 'Date', 'Admit', 'Final', 'Term', 'term', '#', 'ID', 'Total', 'First', 'Last', 'Name', 'Student','student', 'Id', 'Totat', 'Semester', 'Username', 'Date', 'Filename', 'Folder']
+    list = ['MSU', 'digit', 'Digit', 'Date', 'Admit', 'Final', 'Term', 'term', '#', 'ID', 'Total', 'First', 'Last', 'Name', 'Student','student', 'Id', 'Totat', 'Semester', 'Username', 'Date', 'Filename', 'Orientation Year']
     boolean_list = []
     flag = False
 
@@ -119,18 +119,18 @@ def construct_result(df):
     combined_frame['NetID'] = combine_netID(df.transpose())
     combined_frame['MSU 9-Digit'] = combine_9_digit(df.transpose())
     combined_frame['Final Scores'] = combine_scores(df.transpose())
-    combined_frame['Admits'] = combine_admit(df.transpose())
+    combined_frame['Admit Term'] = combine_admit(df.transpose())
 
-    combined_frame['Filename'] = df['Filename']
-    combined_frame['Folder'] = df['Folder']
+    combined_frame['Start Orientation Date'] = df['Start Orientation Date']
+    combined_frame['Orientation Year'] = df['Orientation Year']
 
     return combined_frame.reset_index(drop=True).dropna(thresh=4)
 
 def to_datetime(x):
     season_dict = {
-        "Fall": 'September 22',
-        "Summer": "June 21", 
-        "Spring": "March 20"
+        "Fall": 'August 1',
+        "Summer": "May 15", 
+        "Spring": "January 1"
     }
 
     if str(x) == 'Readmit' or str(x) == np.nan:
@@ -143,8 +143,8 @@ def to_datetime(x):
         return x
 
 def time_difference(x):
-    y = dt.strptime(' '.join(x['Filename']), "%Y %B %d")
-    z = to_datetime(x['Admits'])
+    y = dt.strptime(' '.join(x['Start Orientation Date']), "%Y %B %d")
+    z = to_datetime(x['Admit Term'])
 
     try:
         return z - y
@@ -163,13 +163,13 @@ def main():
     final_df = construct_result(df)
 
     # format filename and folder values
-    final_df['Filename'] = final_df['Filename'].apply(lambda x: x.split("_Orientation")[0].split("_"))
-    final_df['Folder'] = final_df['Folder'].apply(lambda x: x.split("\\")[-1].split("_"))
-    final_df['Folder'] = final_df['Folder'].apply(lambda x: ' '.join(x))    
+    final_df['Start Orientation Date'] = final_df['Start Orientation Date'].apply(lambda x: x.split("_Orientation")[0].split("_"))
+    final_df['Orientation Year'] = final_df['Orientation Year'].apply(lambda x: x.split("\\")[-1].split("_"))
+    final_df['Orientation Year'] = final_df['Orientation Year'].apply(lambda x: ' '.join(x))    
 
     # calculate time difference and format filename
-    final_df['Time Difference'] = final_df.apply(time_difference, axis=1)
-    final_df['Filename'] = final_df['Filename'].apply(lambda x: ' '.join(x))
+    final_df['Admit Term - Orientation Start'] = final_df.apply(time_difference, axis=1)
+    final_df['Start Orientation Date'] = final_df['Start Orientation Date'].apply(lambda x: ' '.join(x))
 
     # output results
     final_df.to_excel("final_df.xlsx")
