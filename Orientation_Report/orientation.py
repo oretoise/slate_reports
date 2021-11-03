@@ -68,9 +68,10 @@ def eliminate_columns(df):
 
     df = df[boolean_list]
 
-    list = ['Final Score', 'Assignments Unposted Final Score', 'Unposted Final Score', 'Assignments Final Points', 'Imported Assignments Final Score','Imported Assignments Final Points', 'Imported Assignments Unposted Final Score', 'ID', 'Assignments Final Score']
+    # list = ['Final Score', 'Assignments Unposted Final Score', 'Unposted Final Score', 'Assignments Final Points', 'Imported Assignments Final Score','Imported Assignments Final Points', 'Imported Assignments Unposted Final Score', 'ID', 'Assignments Final Score']
     
-    return df.drop(labels=list, axis=0).transpose().drop(index=0)
+    # return df.drop(labels=list, axis=0).transpose().drop(index=0)
+    return df.transpose().drop(index=0)
 
 def combine_admit(df):
     df = df[(df.index.str.contains('admit', case=False)) | (df.index.str.contains('term', case=False) | (df.index.str.contains('semester', case=False)))].transpose()
@@ -128,13 +129,13 @@ def construct_result(df):
     combined_frame = pd.DataFrame()
     combined_frame['NetID'] = combine_netID(df.transpose())
     combined_frame['MSU 9-Digit'] = combine_9_digit(df.transpose())
-    combined_frame['Admits'] = combine_admit(df.transpose())
     combined_frame['Final Scores'] = combine_scores(df.transpose())
+    combined_frame['Admits'] = combine_admit(df.transpose())
 
     combined_frame['Filename'] = df['Filename']
     combined_frame['Folder'] = df['Folder']
 
-    return combined_frame.reset_index()
+    return combined_frame.reset_index(drop=True).dropna(thresh=4)
 
 def main():
 
