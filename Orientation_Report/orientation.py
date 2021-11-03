@@ -40,7 +40,8 @@ def data_to_df(data_path):
                 dfs.append(pd.read_excel(data_path / subdir / filename, engine = 'openpyxl'))
             elif filename.endswith('.csv'):
                 dfs.append(pd.read_csv(data_path / subdir / filename))
-    
+            dfs[-1]['Filename'] = filename
+            dfs[-1]['Folder'] = subdir
     df = pd.concat(dfs)
     return df
 
@@ -48,7 +49,7 @@ def eliminate_columns(df):
 
     df = df[[not elem for elem in df.index.str.contains("Day", na=False)]]
         
-    list = ['MSU', 'digit', 'Digit', 'Date', 'Admit', 'Final', 'Term', 'term', '#', 'ID', 'Total', 'First', 'Last', 'Name', 'Student','student', 'Id', 'Totat', 'Semester', 'Username', 'Date']
+    list = ['MSU', 'digit', 'Digit', 'Date', 'Admit', 'Final', 'Term', 'term', '#', 'ID', 'Total', 'First', 'Last', 'Name', 'Student','student', 'Id', 'Totat', 'Semester', 'Username', 'Date', 'Filename', 'Folder']
     boolean_list = []
     flag = False
 
@@ -72,28 +73,68 @@ def eliminate_columns(df):
     return df.drop(labels=list, axis=0).transpose().drop(index=0)
 
 def combine_admit(df):
-    return df[(df.index.str.contains('admit', case=False)) | (df.index.str.contains('term', case=False) | (df.index.str.contains('semester', case=False)))].transpose()
+    df = df[(df.index.str.contains('admit', case=False)) | (df.index.str.contains('term', case=False) | (df.index.str.contains('semester', case=False)))].transpose()
 
+    flag = True
+    for col in df.columns:
+        if flag:
+            df['0-Admitted Students'] = df[str(col)]
+            flag=False
+
+        df['0-Admitted Students'] = np.where(df[str(col)].isnull(), df['0-Admitted Students'], df[str(col)])
+
+    return df['0-Admitted Students']
 
 def combine_netID(df):
-    return df[(df.index.str.contains('Net')) | (df.index.str.contains('SIS Login') | (df.index.str.contains('Username')))].transpose()
+    df = df[(df.index.str.contains('Net')) | (df.index.str.contains('SIS Login') | (df.index.str.contains('Username')))].transpose()
 
+    flag = True
+    for col in df.columns:
+        if flag:
+            df['0-NetID'] = df[str(col)]
+            flag=False
+
+        df['0-NetID'] = np.where(df[str(col)].isnull(), df['0-NetID'], df[str(col)])
+
+    return df['0-NetID']
 
 def combine_9_digit(df):
-    return df[(df.index.str.contains('9')) | (df.index.str.contains('MSU') | (df.index.str.contains('0') | (df.index.str.contains('SIS User') | (df.index.str.contains('Student ID')))))].transpose()
+    df = df[(df.index.str.contains('9')) | (df.index.str.contains('MSU') | (df.index.str.contains('0') | (df.index.str.contains('SIS User') | (df.index.str.contains('Student ID')))))].transpose()
+
+    flag = True
+    for col in df.columns:
+        if flag:
+            df['0-MSU-9-digit'] = df[str(col)]
+            flag=False
+
+        df['0-MSU-9-digit'] = np.where(df[str(col)].isnull(), df['0-MSU-9-digit'], df[str(col)])
+
+    return df['0-MSU-9-digit']
 
 def combine_scores(df):
-    return df[(df.index.str.contains('Fina')) | (df.index.str.contains('Tota'))].transpose()
+    df = df[(df.index.str.contains('Fina')) | (df.index.str.contains('Tota'))].transpose()
+
+    flag = True
+    for col in df.columns:
+        if flag:
+            df['0-Final Scores'] = df[col]
+            flag=False
+
+        df['0-Final Scores'] = np.where(df[str(col)].isnull(), df['0-Final Scores'], df[str(col)])
+
+    return df['0-Final Scores']
 
 def construct_result(df):
-    list = []
-    list.append(combine_scores(df.transpose()))
-    list.append(combine_9_digit(df.transpose()))
-    list.append(combine_netID(df.transpose()))
-    list.append(combine_admit(df.transpose()))
+    combined_frame = pd.DataFrame()
+    combined_frame['NetID'] = combine_netID(df.transpose())
+    combined_frame['MSU 9-Digit'] = combine_9_digit(df.transpose())
+    combined_frame['Admits'] = combine_admit(df.transpose())
+    combined_frame['Final Scores'] = combine_scores(df.transpose())
 
-    # TODO: since concattenating data is being separated fix this later
-    return pd.concat(list)
+    combined_frame['Filename'] = df['Filename']
+    combined_frame['Folder'] = df['Folder']
+
+    return combined_frame.reset_index()
 
 def main():
 
@@ -108,9 +149,9 @@ def main():
 
     
     ''' for debugging '''
-    # final_df.to_excel("final_df.xlsx")
+    final_df.to_excel("final_df.xlsx")
     # df.to_excel("df.xlsx")
-    print(final_df.shape)
+    # print(final_df.shape)
     
 
 if __name__ == "__main__":
