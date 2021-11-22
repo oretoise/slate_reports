@@ -127,6 +127,55 @@ def construct_result(df):
     return combined_frame.reset_index(drop=True).dropna(thresh=4)
 
 def to_datetime(x):
+
+    start_dates = {
+        "Spring 2008": "January 9",
+        "Summer 2008": "May 12",
+        "Fall 2008": "August 18",
+        # Note: Spring 2009's calendar is missing...
+        "Summer 2009": "May 11",
+        "Fall 2009": "August 17",
+        "Spring 2010": "January 6",
+        "Summer 2010": "May 10",
+        "Fall 2010": "August 18",
+        "Spring 2011": "January 5",
+        "Summer 2011": "May 9",
+        "Fall 2011": "August 17",
+        "Spring 2012": "January 9",
+        "Summer 2012": "May 9",
+        "Fall 2012": "August 20",
+        "Spring 2013": "January 7",
+        "Summer 2013": "May 13",
+        "Fall 2013": "August 19",
+        "Spring 2014": "January 13",
+        "Summer 2014": "May 12",
+        "Fall 2014": "August 18",
+        "Spring 2015": "January 12",
+        "Summer 2015": "May 11",
+        "Fall 2015": "August 17",
+        # Spring 2016 calendar also missing...
+        "Summer 2016": "May 9",
+        "Fall 2016": "August 16",
+        "Spring 2017": "January 9",
+        "Summer 2017": "May 8",
+        "Fall 2017": "August 16",
+        "Spring 2018": "January 7",
+        "Summer 2018": "May 7",
+        "Fall 2018": "August 22",
+        "Spring 2019": "January 7",
+        "Summer 2019": "May 8",
+        "Fall 2019": "August 21",
+        "Spring 2020": "January 6",
+        "Summer 2020": "May 6",
+        "Fall 2020": "August 17",
+        "Spring 2021": "January 11",
+        "Summer 2021": "May 10",
+        "Fall 2021": "August 18",
+        "Spring 2022": "January 18",
+        "Summer 2022": "May 16",
+        "Fall 2022": "August 17"
+    }
+
     season_dict = {
         "Fall": 'August 1',
         "Summer": "May 15", 
@@ -136,11 +185,16 @@ def to_datetime(x):
     if str(x) == 'Readmit' or str(x) == np.nan:
         return x
     try:
-        y = str(x).split(' ')
-        y = dt.strptime(season_dict[y[0]] + ' ' + y[1], "%B %d %Y")
+        year = str(x).split(' ')
+        y = dt.strptime(start_dates[x] + ' ' + year[1], "%B %d %Y")
         return y
     except KeyError:
-        return x
+        try:
+            z = str(x).split(' ')
+            z = dt.strptime(season_dict[z[0]] + ' ' + z[1], "%B %d %Y")
+            return z
+        except:
+            return x
 
 def time_difference(x):
     y = dt.strptime(' '.join(x['Start Orientation Date']), "%Y %B %d")
