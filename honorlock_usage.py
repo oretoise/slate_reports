@@ -1,4 +1,5 @@
 import argparse
+import Google.gsheets as gsheets
 import pandas as pd
 import pyautogui
 import pyperclip
@@ -9,7 +10,7 @@ def arguments():
     """ Parse arguments. """
     description = "Create report of what bins applications spend the most time in based on bin history."
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("-i", "--Honorlock Input", action="store",
+    parser.add_argument("-i", "--Input", action="store",
                         help="Honorlock Usage File (CSV)", required=True)
     parser.add_argument("-l", "--Lookup", action="store_true", default=False,
                         help="Directory lookup", required=False)
@@ -74,7 +75,7 @@ def get_dept(email):
         return
 
 
-def main(honorlock_csv, skip):
+def main(honorlock_csv, lookup):
     honorlock = pd.read_csv(honorlock_csv)
 
     professors = pd.read_csv('prof_dept.csv')
@@ -89,7 +90,7 @@ def main(honorlock_csv, skip):
     sorted_profs['Department'] = sorted_profs['instructor_name'].apply(
         lambda x: professors[professors['instructor_name'] == x]['department'].values[0])
 
-    if not skip:
+    if lookup:
 
         # Hit windows key + 1
         pyautogui.hotkey('win', '1')
@@ -103,10 +104,14 @@ def main(honorlock_csv, skip):
     # Output to CSV file.
     sorted_profs.to_csv('sorted_prof.csv', index=False)
 
+    # Push to Gsheets
+    client = gsheets.authorize()
+    gsheets.set_dataframe(client, sorted_profs, "Honorlock")
+
 
 if __name__ == '__main__':
     # Parse CLI arguments.
     ARGS = arguments()
 
     # Call main function.
-    main(ARGS.Honorlock, ARGS.Skip)
+    main(ARGS.Input, ARGS.Lookup)
