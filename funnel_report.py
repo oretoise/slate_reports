@@ -5,7 +5,8 @@
 import argparse
 import pandas as pd
 import numpy as np
-
+import Google.gsheets as gsheets
+import os
 
 def arguments():
     """ Parse arguments. """
@@ -185,7 +186,7 @@ def main(apps, prospects):
 
     # Count prospects, application steps and outcomes by program.
     try:
-        programs_df = pd.read_csv('programs.csv')
+        programs_df = pd.read_csv('Funnel_Report/programs.csv')
     except FileNotFoundError:
         print("Cannot find programs.csv. Is it in the same folder as this script?")
         raise SystemExit
@@ -202,7 +203,7 @@ def main(apps, prospects):
 
     # Add college column based on primary program.
     try:
-        college_df = pd.read_csv("colleges.csv")
+        college_df = pd.read_csv("Funnel_Report/colleges.csv")
     except FileNotFoundError:
         print("Cannot find colleges.csv. Is it in the same folder as this script?")
         raise SystemExit
@@ -246,11 +247,14 @@ def main(apps, prospects):
     college_pivot = college_pivot.reindex(column_order, axis=1)
 
     # Export Pivot tables to excel
-    with pd.ExcelWriter('report_funnel.xlsx') as writer:
-        prospect_program.to_excel(writer, sheet_name='Prospects-Program Info')
-        college_pivot.to_excel(writer, sheet_name='Prospects-College Info')
+    # with pd.ExcelWriter('report_funnel.xlsx') as writer:
+    #     prospect_program.to_excel(writer, sheet_name='Prospects-Program Info')
+    #     college_pivot.to_excel(writer, sheet_name='Prospects-College Info')
 
-    
+    # Push to Gsheets
+    client = gsheets.authorize()
+    gsheets.set_dataframe(client, prospect_program, "Prospects-Program Info")
+    gsheets.set_dataframe(client, college_pivot, "Prospects-College Info")
 
 if __name__ == '__main__':
     # Parse CLI arguments.

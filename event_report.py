@@ -5,6 +5,8 @@ File: event_report.py
 import argparse
 import numpy as np
 import pandas as pd
+import Google.gsheets as gsheets
+
 
 def arguments():
     """ Parse CLI arguments. """
@@ -151,8 +153,11 @@ def main(input_file):
     event_pivot = pd.pivot_table(explosion, values='Name', index='Events', columns='Status', aggfunc='count', fill_value=0, margins=True)
 
     # Output pivot table to a CSV.
-    event_pivot.to_csv('pivot.csv')
+    # event_pivot.to_csv('pivot.csv')
 
+    # Push to Gsheets
+    client = gsheets.authorize()
+    gsheets.set_dataframe(client, event_pivot, "Event Pivot")
     
 if __name__ == "__main__":
     # Parse CLI arguments.
