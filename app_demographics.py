@@ -2,27 +2,18 @@
     File: app_demographics.py
 """
 
-import argparse
 import pandas as pd
 import numpy as np
 import Google.gsheets as gsheets
+import slate_sftp
 
-
-def arguments():
-    """ Parse arguments. """
-    description = "Prepare application data export, push to Google Sheets for Demographics dashboard."
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("-a", "--Applications", action="store",
-                        help="Applications File", required=True)
-    return parser.parse_args()
-
-
-def main(apps):
+def main():
     """ Clean up application data and push to Google Sheets """
 
-    # Load application data into DataFrames.
-    apps_df = pd.read_csv(apps)
+    # Pull latest application export into Pandas DataFrame.
+    apps_df, prospects_df = slate_sftp.pull_latest()
 
+    # Combine Race and Hispanic columns.
     apps_df['Race'] = np.where((apps_df['Hispanic'] == 'Yes') & (apps_df['Race'].notnull()), apps_df['Race'] + ", Hispanic", apps_df['Race'])
 
     # Clean up apps_df by setting "Program" and "Entry Term" columns based on "Round Key".
@@ -53,8 +44,4 @@ def main(apps):
 
 
 if __name__ == '__main__':
-    # Parse CLI arguments.
-    ARGS = arguments()
-
-    # Call main function.
-    main(ARGS.Applications)
+    main()
