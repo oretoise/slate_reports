@@ -2,21 +2,10 @@
     File: funnel_report.py
 """
 
-import argparse
 import pandas as pd
 import numpy as np
 import Google.gsheets as gsheets
-import os
-
-def arguments():
-    """ Parse arguments. """
-    description = "Create report of what bins applications spend the most time in based on bin history."
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("-a", "--Applications", action="store",
-                        help="Applications File", required=True)
-    parser.add_argument("-p", "--Prospects", action="store",
-                        help="Prospects File", required=True)
-    return parser.parse_args()
+import slate_sftp
 
 
 def get_apps(apps, prospect_id):
@@ -80,6 +69,7 @@ def program_match(row, programs):
     else:
         return 'No Match'
 
+
 def sep_prog(df, programs):
     tmp = []
     for index, row in df.iterrows():
@@ -107,6 +97,7 @@ def sep_prog(df, programs):
     df = df.append(tmp, ignore_index=True)
     return df
 
+
 def college_col(x,college_df):
     try:
         if pd.notna(x['Program']) & (not college_df[college_df.prospect_program == x['Program']].empty): 
@@ -120,7 +111,7 @@ def college_col(x,college_df):
         quit()
 
 
-def main(apps, prospects):
+def main():
     """ Build funnel report based on prospects and applications data. """
 
     # Pandas options for debugging.
@@ -128,13 +119,8 @@ def main(apps, prospects):
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_colwidth', None)
 
-    # Load apps and prospects files into DataFrames.
-    apps_df = pd.read_csv(apps)
-    prospects_df = pd.read_csv(prospects)
-
-
-
-
+    # Pull latest application export into Pandas DataFrame.
+    apps_df, prospects_df = slate_sftp.pull_latest()
 
     # Clean up apps_df by setting "Program" and "Entry Term" columns based on "Round Key".
     apps_df['Program'] = np.where(apps_df["GR Academic Interest (App)"].isnull(), apps_df["UG Academic Interest (App)"], apps_df["GR Academic Interest (App)"])
@@ -155,10 +141,6 @@ def main(apps, prospects):
     apps_df['Application Status'] = np.where(apps_df['Application Status'] == '', 'Decided', apps_df['Application Status'])
 
     del apps_df['Decision Confirmed Name']
-    
-
-
-
 
     # Rank/Sort applications by 'Application Status'.
     prospects_df['Furthest App'] = prospects_df.apply(lambda x: rank_apps(apps_df, x['Apps']), axis=1)
@@ -180,13 +162,9 @@ def main(apps, prospects):
     prospects_df['Entry Term Match'] = np.where(prospects_df['Term']==prospects_df['App Entry Term'], 'Match', 'Later')
     prospects_df['Entry Term Match'] = np.where((pd.notna(prospects_df['Term'])) & (pd.notna(prospects_df['App Entry Term'])), prospects_df['Entry Term Match'], None)
     
-
-
-
-
     # Count prospects, application steps and outcomes by program.
     try:
-        programs_df = pd.read_csv('Funnel_Report/programs.csv')
+        programs_df = pd.read_csv('programs.csv')
     except FileNotFoundError:
         print("Cannot find programs.csv. Is it in the same folder as this script?")
         raise SystemExit
@@ -197,22 +175,15 @@ def main(apps, prospects):
     # For prospects with multiple programs, keep either further app, or if prospect, split into multiple records (one for each program) as prospects for each program.
     prospects_df = sep_prog(prospects_df, programs_df)
 
-
-
-
-
     # Add college column based on primary program.
     try:
-        college_df = pd.read_csv("Funnel_Report/colleges.csv")
+        college_df = pd.read_csv("colleges.csv")
     except FileNotFoundError:
         print("Cannot find colleges.csv. Is it in the same folder as this script?")
         raise SystemExit
     
     prospects_df['College'] = prospects_df.apply(lambda x: college_col(x,college_df), axis=1)
     
-
-
-
     # Data Cleanup Section
     del prospects_df['Apps']
     
@@ -246,10 +217,8 @@ def main(apps, prospects):
     prospect_program = prospect_program.reindex(column_order, axis=1)
     college_pivot = college_pivot.reindex(column_order, axis=1)
 
-    # Export Pivot tables to excel
-    # with pd.ExcelWriter('report_funnel.xlsx') as writer:
-    #     prospect_program.to_excel(writer, sheet_name='Prospects-Program Info')
-    #     college_pivot.to_excel(writer, sheet_name='Prospects-College Info')
+    # print(prospect_program.head())
+    # print(college_pivot.head())
 
     # Push to Gsheets
     client = gsheets.authorize()
@@ -257,8 +226,6 @@ def main(apps, prospects):
     gsheets.set_dataframe(client, college_pivot, "Prospects-College Info")
 
 if __name__ == '__main__':
-    # Parse CLI arguments.
-    ARGS = arguments()
 
     # Call main function.
-    main(ARGS.Applications, ARGS.Prospects)
+    main()

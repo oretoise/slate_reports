@@ -23,7 +23,7 @@ def set_dataframe(client, df, worksheet):
         sheet = gdoc.worksheet('title', worksheet)
 
     # Set the sheet contents to the provided dataframe.
-    sheet.set_dataframe(df,(1,1))
+    sheet.set_dataframe(df,(1,1), copy_index=True)
     # Sync it.
     sheet.sync()
 
