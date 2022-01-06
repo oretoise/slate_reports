@@ -75,10 +75,14 @@ def get_dept(email):
         return
 
 
+def pull_dept(professors, x):
+    #print(x)
+    return professors[professors['instructor_name'] == x]['department'].values[0]
+
 def main(honorlock_csv, lookup):
     honorlock = pd.read_csv(honorlock_csv)
 
-    professors = pd.read_csv('prof_dept.csv')
+    professors = pd.read_csv('./sheets/prof_dept.csv')
 
     # Determine campus.
     honorlock['campus'] = honorlock['CRN'].apply(campus)
@@ -87,8 +91,7 @@ def main(honorlock_csv, lookup):
     sorted_profs = honorlock.groupby(['instructor_name', 'instructor_email', 'campus']).apply(lambda x: x.groupby(['campus', 'CRN']).session_count.first().sum()).reset_index(name="total").sort_values(by='total', ascending=False)
 
     # sorted_profs['Campus'] = sorted_profs['CRN'].apply(campus)
-    sorted_profs['Department'] = sorted_profs['instructor_name'].apply(
-        lambda x: professors[professors['instructor_name'] == x]['department'].values[0])
+    sorted_profs['Department'] = sorted_profs['instructor_name'].apply(lambda x: pull_dept(professors, x))
 
     if lookup:
 
