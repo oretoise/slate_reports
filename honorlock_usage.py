@@ -1,4 +1,5 @@
 import argparse
+from ast import Index
 import Google.gsheets as gsheets
 import pandas as pd
 import pyautogui
@@ -38,7 +39,10 @@ def campus(crn):
                 if len(section) == 2:
                     return "Campus 1"
                 else:
-                    return "Campus " + section[0]
+                    if len(section) == 3 and section[0] == "0":
+                        return "Campus 1"
+                    else:
+                        return "Campus " + section[0]
             else:
                 return "Other"
         else:
@@ -76,8 +80,11 @@ def get_dept(email):
 
 
 def pull_dept(professors, x):
-    #print(x)
-    return professors[professors['instructor_name'] == x]['department'].values[0]
+    try:
+        return professors[professors['instructor_name'] == x]['department'].values[0]
+    except IndexError:
+        print("Error retrieving information for", x)
+        print("Add their information to prof_dept.csv from Banner.")
 
 def main(honorlock_csv, lookup):
     honorlock = pd.read_csv(honorlock_csv)
@@ -108,8 +115,8 @@ def main(honorlock_csv, lookup):
     sorted_profs.to_csv('sorted_prof.csv', index=False)
 
     # Push to Gsheets
-    client = gsheets.authorize()
-    gsheets.set_dataframe(client, sorted_profs, "Honorlock")
+    # client = gsheets.authorize()
+    # gsheets.set_dataframe(client, sorted_profs, "Honorlock")
 
 
 if __name__ == '__main__':
